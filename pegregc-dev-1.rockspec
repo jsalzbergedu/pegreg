@@ -37,16 +37,19 @@ build = {
       ["pegreg.interpreters.print_syntax"] = "src/pegreg/interpreters/print_syntax.lua",
       ["pegreg.interpreters.remark_fin"] = "src/pegreg/interpreters/remark_fin.lua",
       ["pegreg.interpreters.sc_to_cs"] = "src/pegreg/interpreters/sc_to_cs.lua",
-      ["pegreg.interpreters.state_arrow"] = "src/pegreg/interpreters/state_arrow.lua"
+      ["pegreg.interpreters.state_arrow"] = "src/pegreg/interpreters/state_arrow.lua",
+      ["pegreg.compiler.nfst_to_dfst"] = "src/pegreg/compiler/nfst_to_dfst.lua"
+      ["pegreg.compiler.emit_states"] = "src/pegreg/compiler/emit_states.lua"
    }
 }
 
 test_dependencies = {
    "luaunit >= 3",
-   "luafilesystem >= 1.8"
+   "luafilesystem >= 1.8",
+   "graphlua = dev-1"
 }
 
 test = {
    type = "command",
-   script = "test/test.lua"
+   script = "test.lua"
 }
