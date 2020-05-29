@@ -76,7 +76,7 @@ function l.l()
    ----------------------------------------------------------------------------
    -- Empty transition
    ----------------------------------------------------------------------------
-   function l:e(rule)
+   function l:e()
       return function (interpreter)
          return interpreter.e()
       end

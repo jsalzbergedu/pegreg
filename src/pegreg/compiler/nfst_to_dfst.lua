@@ -132,7 +132,7 @@ function nfst_to_dfst.find_states(top)
    local transitions_stack = {}
 
    if next(transitions) ~= nil then
-      table.insert(transitions_stack, {1, transitions})
+      table.insert(transitions_stack, {0, transitions})
    end
    while #transitions_stack > 0 do
       local n, stack_top =
@@ -147,10 +147,10 @@ function nfst_to_dfst.find_states(top)
             nfst_to_dfst.reachable(edge.to, reachable, transitions)
          end
          table.insert(dfst_states, reachable)
-         table.insert(dfst_transitions, reify.arrow(n, #dfst_states,
+         table.insert(dfst_transitions, reify.arrow(n, #dfst_states - 1,
                                                     c, c)[1])
          if next(transitions) ~= nil then
-            table.insert(transitions_stack, {#dfst_states, transitions})
+            table.insert(transitions_stack, {#dfst_states - 1, transitions})
          end
       end
    end
@@ -178,12 +178,11 @@ function nfst_to_dfst.dfst(dfst_states, dfst_transitions)
    local states = reify.null()
    local arrows = reify.null()
    for i, vertex_list in ipairs(dfst_states) do
-      local number = i
       local final = false
       for _, state in ipairs(vertex_list) do
          final = state.data.final or final
       end
-      states = reify.pair(reify.state(i, final), states)
+      states = reify.pair(reify.state(i - 1, final), states)
    end
    for _, v in ipairs(dfst_transitions) do
       local arrow = {v}

@@ -17,18 +17,20 @@ local reify = pegreg.reify
 
 TestReify = {}
 
+function TestReify.make_reified()
+   local l = l.l()
+   local reified = l:rule('A'):is(l:lit('aa'))
+      :rule('B'):is(l:lit('bb'))
+      :rule('K'):is(l:lit('x'))
+      :grammar(l:seq(l:choice(l:ref('A'), l:ref('B')), l:ref('K')))
+      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
+   return reified
+end
+
 function TestReify:testReifyOutput()
    print()
    print("Testing the reify interpreter")
-   do
-      local l = l.l()
-      local reified = l:rule('A'):is(l:lit('aa'))
-         :rule('B'):is(l:lit('bb'))
-         :rule('K'):is(l:lit('x'))
-         :grammar(l:seq(l:choice(l:ref('A'), l:ref('B')), l:ref('K')))
-         :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
-      print(tostring(reified))
-   end
+   print(tostring(TestReify.make_reified()))
 end
 
 function TestReify:testReifyInterpreter()

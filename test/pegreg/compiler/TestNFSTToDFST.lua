@@ -1,3 +1,4 @@
+require("test.pegreg.interpreters.TestReify")
 local pegreg = require("pegreg")
 local luaunit = require("luaunit")
 local graph = require("graph")
@@ -19,25 +20,15 @@ local reify = pegreg.reify
 TestNFSTToDFST = {}
 
 
-local function make_reified()
-   local l = l.l()
-   local reified = l:rule('A'):is(l:lit('aa'))
-      :rule('B'):is(l:lit('bb'))
-      :rule('K'):is(l:lit('x'))
-      :grammar(l:seq(l:choice(l:ref('A'), l:ref('B')), l:ref('K')))
-      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
-   return reified
-end
-
 function TestNFSTToDFST:testNub()
    print()
    print("Testing nub")
-   print(nfst_to_dfst.nub(make_reified()))
+   print(nfst_to_dfst.nub(TestReify.make_reified()))
 end
 
 function TestNFSTToDFST:testEdgeListToGraph()
    g = graph.graph.new()
-   local top = nfst_to_dfst.edge_list_to_graph(make_reified(), g)
+   local top = nfst_to_dfst.edge_list_to_graph(TestReify.make_reified(), g)
    -- TODO insert more tests here
 end
 
@@ -124,7 +115,7 @@ function TestNFSTToDFST:testFindStates()
       actual_transitions = actual_transitions .. tostring(v) .. " "
    end
    print("actual transitions is: ", actual_transitions)
-   local expected_transitions = "(arrow 1 2 a a) (arrow 1 3 b b) "
+   local expected_transitions = "(arrow 0 1 a a) (arrow 0 2 b b) "
    luaunit.assertEquals(actual_transitions, expected_transitions)
 end
 
@@ -190,7 +181,7 @@ function TestNFSTToDFST:testFindStatesRedundant()
    for _, v in ipairs(transitions) do
       actual_transitions = actual_transitions .. tostring(v) .. " "
    end
-   local expected_transitions = "(arrow 1 2 b b) "
+   local expected_transitions = "(arrow 0 1 b b) "
    luaunit.assertEquals(expected_transitions, actual_transitions)
 end
 
@@ -201,6 +192,6 @@ function TestNFSTToDFST:testDfst()
    local states, transitions = nfst_to_dfst.find_states(top)
    local actual_dfst = nfst_to_dfst.dfst(states, transitions)
    local expected_dfst = [[
-(reified (states ((state 1 false) (state 2 true) (state 3 true))) (arrows ((arrow 1 2 a a) (arrow 1 3 b b))))]]
+(reified (states ((state 0 false) (state 1 true) (state 2 true))) (arrows ((arrow 0 1 a a) (arrow 0 2 b b))))]]
    luaunit.assertEquals(tostring(actual_dfst), expected_dfst)
 end

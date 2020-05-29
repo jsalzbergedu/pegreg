@@ -1,6 +1,6 @@
 rockspec_format = "3.0"
 
-package = "pegregc"
+package = "pegreg"
 
 version = "dev-1"
 
@@ -38,8 +38,9 @@ build = {
       ["pegreg.interpreters.remark_fin"] = "src/pegreg/interpreters/remark_fin.lua",
       ["pegreg.interpreters.sc_to_cs"] = "src/pegreg/interpreters/sc_to_cs.lua",
       ["pegreg.interpreters.state_arrow"] = "src/pegreg/interpreters/state_arrow.lua",
-      ["pegreg.compiler.nfst_to_dfst"] = "src/pegreg/compiler/nfst_to_dfst.lua"
-      ["pegreg.compiler.emit_states"] = "src/pegreg/compiler/emit_states.lua"
+      ["pegreg.compiler.nfst_to_dfst"] = "src/pegreg/compiler/nfst_to_dfst.lua",
+      ["pegreg.compiler.emit_states"] = "src/pegreg/compiler/emit_states.lua",
+      ["pegreg.compiler.compiler"] = "src/pegreg/compiler/compiler.lua"
    }
 }
 
