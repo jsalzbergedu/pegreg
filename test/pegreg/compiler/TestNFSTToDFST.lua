@@ -195,3 +195,102 @@ function TestNFSTToDFST:testDfst()
 (reified (states ((state 0 false) (state 1 true) (state 2 true))) (arrows ((arrow 0 1 a a) (arrow 0 2 b b))))]]
    luaunit.assertEquals(tostring(actual_dfst), expected_dfst)
 end
+
+-- NFST with branching and rejoining
+-- States: 0, 1, 2, 3, 4, 5, 6, 7
+-- Final states: 7
+-- Transitions:
+-- from | to | tape
+-- 0    | 1  | 0:0
+-- 1    | 2  | 0:0
+-- 1    | 3  | 0:0
+-- 2    | 4  | a:a
+-- 3    | 5  | b:b
+-- 4    | 6  | 0:0
+-- 5    | 6  | 0:0
+-- 6    | 7  | x:x
+local function make_rejoining_nfst()
+   local p = reify.pair
+   local s = reify.state
+   local a = reify.arrow
+   local states = reify.null()
+   local arrows = reify.null()
+   for i = 0, 6 do
+      states = reify.pair(s(i, false), states)
+   end
+   states = p(s(7, true), states)
+   arrows = p(a(0, 1, '', ''), arrows)
+   arrows = p(a(1, 2, '', ''), arrows)
+   arrows = p(a(1, 3, '', ''), arrows)
+   arrows = p(a(2, 4, 'b', 'b'), arrows)
+   arrows = p(a(3, 5, 'a', 'a'), arrows)
+   arrows = p(a(4, 6, '', ''), arrows)
+   arrows = p(a(5, 6, '', ''), arrows)
+   arrows = p(a(6, 7, 'x', 'x'), arrows)
+   return reify.create(states, arrows)
+end
+
+function TestNFSTToDFST:testFindStatesRedundant()
+   print("Testing find states")
+   local g = graph.graph.new()
+   local top = nfst_to_dfst.edge_list_to_graph(make_rejoining_nfst(), g)
+   local states, transitions = nfst_to_dfst.find_states(top)
+   local actual_states = "\n"
+   for i, v in ipairs(states) do
+      actual_states = actual_states .. tostring(i) .. "\n"
+      for _, o in ipairs(v) do
+         actual_states = actual_states .. tostring(o.data)
+         actual_states = actual_states .. tostring(" ")
+      end
+      actual_states = actual_states .. "\n"
+   end
+   local expected_states =
+      [[
+
+1
+(state 0 false) (state 1 false) (state 2 false) (state 3 false) 
+2
+(state 4 false) (state 5 false) (state 6 false) 
+3
+(state 7 true) 
+]]
+   luaunit.assertEquals(actual_states, expected_states)
+
+   local actual_transitions = ""
+   for _, v in ipairs(transitions) do
+      actual_transitions = actual_transitions .. tostring(v) .. " "
+   end
+   local expected_transitions = "(arrow 0 1 b b) "
+   luaunit.assertEquals(expected_transitions, actual_transitions)
+end
+
+function TestNFSTToDFST:testDfstRejoining()
+   print("Testing find states")
+   local g = graph.graph.new()
+   local top = nfst_to_dfst.edge_list_to_graph(make_dummy_nfst(), g)
+   local states, transitions = nfst_to_dfst.find_states(top)
+   local actual_dfst = nfst_to_dfst.dfst(states, transitions)
+   local expected_dfst = [[
+(reified (states ((state 0 false) (state 1 true) (state 2 true))) (arrows ((arrow 0 1 a a) (arrow 0 2 b b))))]]
+   luaunit.assertEquals(tostring(actual_dfst), expected_dfst)
+end
+
+function TestNFSTToDFST:testReachableG()
+   print("Testing reachable G")
+   local g = graph.graph.new()
+   local top = nfst_to_dfst.edge_list_to_graph(make_rejoining_nfst(), g)
+   local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
+   -- If you want to see the generated graph,
+   -- uncomment the following line.
+   -- graph.plantuml(reachable)
+end
+
+function TestNFSTToDFSTFromReachable()
+
+   print("Testing reachable G")
+   local g = graph.graph.new()
+   local top = nfst_to_dfst.edge_list_to_graph(make_rejoining_nfst(), g)
+   local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
+   local reified = nfst_to_dfst.find_dfst_from_reachable(reachable, top_reachable, vertex_to_final)
+   print(reified)
+end

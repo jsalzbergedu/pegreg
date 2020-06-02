@@ -72,14 +72,21 @@ end
 -- epsilon transition from VERTEX,
 -- and add to TRANSITIONS all of the transitions
 -- not reachable by epsilon transition.
+-- Furthermore, set the array
+-- ISFINAL's index of one to whether
+-- or not the epsilon closure is final
 -- Return REACHABLE.
 --------------------------------------------------------------------------------
-function nfst_to_dfst.reachable(vertex, reachable, transitions)
+function nfst_to_dfst.reachable(vertex, reachable, transitions, isfinal)
    table.insert(reachable, vertex)
+   -- TODO remove this check
+   if isfinal ~= nil then
+      isfinal[1] = isfinal[1] or vertex.data.final
+   end
    for other_vertex, edge in pairs(vertex.adjacencies) do
       local c = edge.data.input
       if c == '' then
-         nfst_to_dfst.reachable(other_vertex, reachable, transitions)
+         nfst_to_dfst.reachable(other_vertex, reachable, transitions, isfinal)
       else
          if transitions[c] == nil then
             transitions[c] = {}
@@ -106,6 +113,133 @@ local function opairs(t)
       return n + 1, keys[n+1], t[keys[n + 1]]
    end
    return onext, t, 0
+end
+
+--------------------------------------------------------------------------------
+-- Create a new graph wrapping the old graph.
+-- The new graph's verticies will be the
+-- epsilon closures of the old graph's verticies
+-- arranged into an array of verticies.
+-- The new graph's edges will be based on the old graph's edges.
+-- Return the graph, the toppmost vertex,
+-- and a table to from epsilon closures to whether they
+-- are final or not.
+--------------------------------------------------------------------------------
+function nfst_to_dfst.reachable_g(g, top)
+   local vertex_to_transitions = {}
+   local reachable = graph.graph.new()
+
+   local reachable_top = {}
+   local transitions = {}
+   local isfinal = {[1] = false}
+   local vertex_to_final = {}
+   nfst_to_dfst.reachable(top, reachable_top, transitions, isfinal)
+   -- table.insert(all_transitions, transitions)
+   local out = reachable:insert_vertex(reachable_top)
+   vertex_to_transitions[out] = transitions
+   vertex_to_final[out] = isfinal[1]
+
+   for vertex in g:verticies() do
+      local reachable_states = {}
+      local transitions = {}
+      local isfinal = {[1] = false}
+      nfst_to_dfst.reachable(vertex, reachable_states, transitions, isfinal)
+      local vtx = reachable:insert_vertex(reachable_states)
+      vertex_to_transitions[vtx] = transitions
+      vertex_to_final[vtx] = isfinal[1]
+   end
+
+   for vertex, transitions in pairs(vertex_to_transitions) do
+      for _, c, edge_list in opairs(transitions) do
+         for _, edge in ipairs(edge_list) do
+            local arrow = edge.data
+            for other_vertex in reachable:verticies() do
+               local nfst_verticies = other_vertex.data
+               local arrow_exists = false
+               for _, nfst_vertex in ipairs(nfst_verticies) do
+                  local nfst_state = nfst_vertex.data
+                  if nfst_state.number == arrow.to then
+                     arrow_exists = true
+                  end
+               end
+               if arrow_exists then
+                  -- The arrow won't have the right numbers.
+                  -- That's ok, we just need to keep track of it
+                  -- for its character.
+                  reachable:insert_edge(vertex, other_vertex, arrow)
+               end
+            end
+         end
+      end
+   end
+
+   -- local pruned_reachable = graph.graph.new()
+   -- local pruned_top, pruned_g = graph.spanning_tree(out)
+
+   -- local vertex_to_state_number = {}
+   -- local n = 0
+   -- vertex_to_state_number[pruned_top] = 0
+
+   -- for vertex in pruned_g:verticies() do
+   --    if vertex ~= pruned_top then
+   --       n = n + 1
+   --       vertex_to_state_number[vertex] = n
+   --    end
+   -- end
+
+   -- for vertex in pruned_g:verticies() do
+
+   -- end
+   return reachable, out, vertex_to_final
+end
+
+--------------------------------------------------------------------------------
+-- Find the DFST from the reachable graph, its top vertex,
+-- and whether the top vertex is final
+--------------------------------------------------------------------------------
+function nfst_to_dfst.find_dfst_from_reachable(reachable, top, vertex_to_final)
+   local pruned_reachable = graph.graph.new()
+   local pruned_g, pruned_top = graph.spanning_tree(top)
+   local vertex_to_state_number = {}
+   local number_to_final = {}
+   local n = 0
+   vertex_to_state_number[top] = 0
+   number_to_final[0] = vertex_to_final[top]
+
+   for vertex in pruned_g:verticies() do
+      if vertex ~= pruned_top then
+         n = n + 1
+         vertex_to_state_number[vertex.data] = n
+         number_to_final[n] = vertex_to_final[vertex.data]
+      end
+   end
+
+   local new_arrows = {}
+
+   for vertex in pruned_g:verticies() do
+      for other_vertex, edge in pairs(vertex.data.adjacencies) do
+         local from = vertex_to_state_number[vertex.data]
+         local to = vertex_to_state_number[other_vertex]
+         local old_arrow = edge.data
+         local input = old_arrow.input
+         local output = old_arrow.output
+         local arrow = reify.arrow(from, to, input, output)[1]
+         table.insert(new_arrows, arrow)
+      end
+   end
+
+   local new_states = {}
+   setmetatable(new_states, reify.pair_mt)
+
+   for i = 0, n, 1 do
+      table.insert(new_states, reify.state(i, number_to_final[i])[1])
+   end
+
+   table.sort(new_arrows)
+   new_arrows = nub(new_arrows)
+   setmetatable(new_arrows, reify.pair_mt)
+
+   return reify.create(new_states, new_arrows)
 end
 
 --------------------------------------------------------------------------------

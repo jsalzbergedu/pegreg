@@ -27,7 +27,7 @@ function emit_states.from_dfst(dfst)
          local fse = ins:get_outgoing(arrow.input)
          fse:set_outstate(arrow.to)
          fse:set_outchar(arrow.output)
-         print("Inserted arrow from ", i - 1, "to", arrow.to)
+         print("Inserted arrow from ", i - 1, "to", arrow.to, "char", arrow.output)
       end
 
       ins:finish()
