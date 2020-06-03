@@ -39,8 +39,8 @@ function compiler.l()
       local reified = language:create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
       local g = graph.graph.new()
       local top = nfst_to_dfst.edge_list_to_graph(reified, g)
-      local states, transitions = nfst_to_dfst.find_states(top)
-      local dfst = nfst_to_dfst.dfst(states, transitions)
+      local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
+      local dfst = nfst_to_dfst.find_dfst_from_reachable(reachable, top_reachable, vertex_to_final)
       return emit_states.from_dfst(dfst)
    end
 

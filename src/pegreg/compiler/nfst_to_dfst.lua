@@ -173,23 +173,6 @@ function nfst_to_dfst.reachable_g(g, top)
       end
    end
 
-   -- local pruned_reachable = graph.graph.new()
-   -- local pruned_top, pruned_g = graph.spanning_tree(out)
-
-   -- local vertex_to_state_number = {}
-   -- local n = 0
-   -- vertex_to_state_number[pruned_top] = 0
-
-   -- for vertex in pruned_g:verticies() do
-   --    if vertex ~= pruned_top then
-   --       n = n + 1
-   --       vertex_to_state_number[vertex] = n
-   --    end
-   -- end
-
-   -- for vertex in pruned_g:verticies() do
-
-   -- end
    return reachable, out, vertex_to_final
 end
 
@@ -240,109 +223,6 @@ function nfst_to_dfst.find_dfst_from_reachable(reachable, top, vertex_to_final)
    setmetatable(new_arrows, reify.pair_mt)
 
    return reify.create(new_states, new_arrows)
-end
-
---------------------------------------------------------------------------------
--- Given the top state in a graph, TOP,
--- find the states and transitions in an fst
--- and return them.
---------------------------------------------------------------------------------
-function nfst_to_dfst.find_states(top)
-   -- First, find the states reachable from the top.
-   local dfst_states = {}
-   local dfst_transitions = {}
-   local reachable = {}
-   local transitions = {}
-   local state_to_number = {}
-   nfst_to_dfst.reachable(top, reachable, transitions)
-   table.insert(dfst_states, reachable)
-   -- Then, recurse through the states that could not
-   -- be reached by epsilon transition.
-   -- Keep track of these via a stack of
-   -- {N, TRANSITIONS}
-   -- where N is the DFST state number
-   -- and TRANSITIONS is a list
-   -- of verticies to transition to
-   local transitions_stack = {}
-
-   if next(transitions) ~= nil then
-      table.insert(transitions_stack, {0, transitions})
-   end
-   while #transitions_stack > 0 do
-      local n, stack_top =
-         unpack(transitions_stack[#transitions_stack])
-      transitions_stack[#transitions_stack] = nil
-      for _, c, edge_list in opairs(stack_top) do
-         transitions = {}
-         reachable = {}
-         for _, edge in ipairs(edge_list) do
-            -- Keep adding reachable and transitions to the
-            -- same lists/tables
-            nfst_to_dfst.reachable(edge.to, reachable, transitions)
-         end
-         table.insert(dfst_states, reachable)
-         table.insert(dfst_transitions, reify.arrow(n, #dfst_states - 1,
-                                                    c, c)[1])
-         if next(transitions) ~= nil then
-            table.insert(transitions_stack, {#dfst_states - 1, transitions})
-         end
-      end
-   end
-
-   -- Sort and nub the states
-   for _, v in ipairs(dfst_states) do
-      table.sort(v)
-   end
-   for i, v in ipairs(dfst_states) do
-      dfst_states[i] = nub(v)
-   end
-
-   -- Sort and nub the transitions
-   table.sort(dfst_transitions)
-   dfst_transitions = nub(dfst_transitions)
-   return dfst_states, dfst_transitions
-end
-
---------------------------------------------------------------------------------
--- Takes DFST_STATES and DFST_TRANSITIONS,
--- the two tables created by find_states,
--- and creates a reified DFST.
---------------------------------------------------------------------------------
-function nfst_to_dfst.dfst(dfst_states, dfst_transitions)
-   local states = reify.null()
-   local arrows = reify.null()
-   for i, vertex_list in ipairs(dfst_states) do
-      local final = false
-      for _, state in ipairs(vertex_list) do
-         final = state.data.final or final
-      end
-      states = reify.pair(reify.state(i - 1, final), states)
-   end
-   for _, v in ipairs(dfst_transitions) do
-      local arrow = {v}
-      setmetatable(arrow, reify.pair_mt)
-      arrows = reify.pair(arrow, arrows)
-   end
-   local reified = reify.create(states, arrows)
-   nfst_to_dfst.sort_reified(reified)
-   return reified
-end
-
---------------------------------------------------------------------------------
--- Takes in TOP, the top vertex of the NFST,
--- N, the current number
--- REIFIED, an empty reify construct,
--- and ASSMT, an empty table of assignments
--- from NFST states to DSFT states.
--- Builds on and returns REIFIED.
---------------------------------------------------------------------------------
-function nfst_to_dfst.convert(top, n, reified, assmt)
-   local stack = {}
-   local possible_through_epsilon = {}
-   while #stack > 0 do
-      local top = stack[#stack]
-      stack[#stack] = nil
-   end
 end
 
 return nfst_to_dfst

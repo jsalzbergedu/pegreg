@@ -15,5 +15,5 @@ function TestCompiler:testCompilerOutput()
       local outstr, match_success, matched_states = it:match_string("bbx")
       luaunit.assertEquals(outstr, "bbx")
       luaunit.assertTrue(match_success)
-      luaunit.assertEquals(matched_states, {2, 3, 4})
+      luaunit.assertEquals(matched_states, {2, 4, 5})
 end
