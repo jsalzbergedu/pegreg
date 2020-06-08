@@ -24,10 +24,10 @@ function emit_states.from_dfst(dfst)
       end
 
       for _, arrow in ipairs(state_to_arrow[i - 1]) do
+         print("Inserting arrow from", i - 1, "to", arrow.to, "with", arrow.input)
          local fse = ins:get_outgoing(arrow.input)
          fse:set_outstate(arrow.to)
          fse:set_outchar(arrow.output)
-         print("Inserted arrow from ", i - 1, "to", arrow.to, "char", arrow.output)
       end
 
       ins:finish()
