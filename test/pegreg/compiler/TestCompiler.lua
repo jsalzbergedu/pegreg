@@ -32,3 +32,22 @@ function TestCompiler:testCompilerOutput2()
       luaunit.assertTrue(match_success)
       luaunit.assertEquals(matched_states, {2, 4, 6, 8, 10, 3, 5, 7, 9, 11, 12, 13, 14})
 end
+
+local very_large = [[
+Jamie was raised, in a different time and place, by itinerant goat herders. Her childhood companions were small prairie mammals and dreams of computing machines.
+]]
+
+function TestCompiler:testCompilerOutput3()
+      local l = compiler.l()
+      local it = l:grammar(l:lit(very_large))
+                  :create()
+      local outstr, match_success, matched_states = it:match_string("Jamie")
+      luaunit.assertEquals(outstr, "Jamie")
+      luaunit.assertFalse(match_success)
+      luaunit.assertEquals(matched_states, {1, 2, 3, 4, 5})
+
+      local outstr, match_success, matched_states = it:match_string(very_large)
+      luaunit.assertEquals(outstr, very_large)
+      luaunit.assertTrue(match_success)
+      luaunit.assertEquals(#matched_states, #very_large)
+end

@@ -34,7 +34,7 @@ end
 
 function expand_ref.star(item)
    return function (i)
-      i.star(item(i))
+      return i.star(item(i))
    end
 end
 

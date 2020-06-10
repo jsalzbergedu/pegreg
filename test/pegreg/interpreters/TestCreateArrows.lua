@@ -26,6 +26,16 @@ function TestCreateArrows:testCreateArrows()
    end
 end
 
+function TestCreateArrows:testCreateArrowsStar()
+   print()
+   print("Testing the create arrows interpreter w/ star")
+   do
+      local l = l.l()
+      local arrows = l:grammar(l:seq(l:star(l:lit("a")), l:lit("b")))
+         :create(expand_ref)(expand_string)(mark_fin)(enumerate)(create_arrows)(flatten)(print_fst)
+   end
+end
+
 function TestCreateArrows:testCreateNInterpreter()
    TestEnumerate:assertNInterpreter(create_arrows)
 end
