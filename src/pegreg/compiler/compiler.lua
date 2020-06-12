@@ -60,6 +60,10 @@ function compiler.l()
       return language:ref(rule)
    end
 
+   function l:star(item)
+      return language:star(item)
+   end
+
    function l:e()
       return language:e()
    end

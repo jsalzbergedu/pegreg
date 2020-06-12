@@ -38,6 +38,16 @@ function TestStateArrow:testStateArrowOutput()
    end
 end
 
+function TestCreateArrows:testStateArrowStar()
+   print()
+   print("Testing the state_arrow interpreter w/ star")
+   do
+      local l = l.l()
+      local arrows = l:grammar(l:seq(l:star(l:lit("a")), l:lit("b")))
+         :create(expand_ref)(expand_string)(mark_fin)(enumerate)(state_arrow)(flatten)(print_fst)
+   end
+end
+
 function TestStateArrow:testStateArrowInterpreter()
    TestEnumerate:assertNInterpreter(state_arrow)
 end

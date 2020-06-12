@@ -29,6 +29,7 @@ function TestCreateStates:testCreateStateOutput()
    end
 end
 
+
 function TestCreateStates:testCreateStatesInterpreter()
    TestEnumerate:assertNInterpreter(create_states)
 end

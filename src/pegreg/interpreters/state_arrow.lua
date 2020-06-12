@@ -90,7 +90,10 @@ function state_arrow.mark_n(n, item)
 end
 
 function state_arrow.star(item)
-   assert(false, "TODO")
+   local states, arrows = item(extract)
+   return function (f)
+      return f(create_states.star(states), create_arrows.star(arrows))
+   end
 end
 
 return state_arrow

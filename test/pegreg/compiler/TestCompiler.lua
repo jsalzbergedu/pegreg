@@ -51,3 +51,12 @@ function TestCompiler:testCompilerOutput3()
       luaunit.assertTrue(match_success)
       luaunit.assertEquals(#matched_states, #very_large)
 end
+
+function TestCompiler:testCompilerStar()
+   local l = compiler.l()
+   local it = l:grammar(l:seq(l:star(l:lit('a')), l:lit('b'))):create()
+   local outstr, match_success, matched_states = it:match_string("aaaab")
+   luaunit.assertEquals(outstr, "aaaab")
+   luaunit.assertTrue(match_success)
+   luaunit.assertEquals(matched_states, {1, 1, 1, 1, 2})
+end

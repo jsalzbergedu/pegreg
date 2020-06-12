@@ -43,7 +43,11 @@ end
 
 function mark_fin.star(item)
    return function (t, interpreter)
-      return interpreter.notfin(interpreter.star(item(t, interpreter)))
+      if t then
+         return interpreter.fin(interpreter.star(item(t, interpreter)))
+      else
+         return interpreter.notfin(interpreter.star(item(t, interpreter)))
+      end
    end
 end
 
