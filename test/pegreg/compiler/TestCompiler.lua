@@ -60,3 +60,13 @@ function TestCompiler:testCompilerStar()
    luaunit.assertTrue(match_success)
    luaunit.assertEquals(matched_states, {1, 1, 1, 1, 2})
 end
+
+
+function TestCompiler:testStarNotPossesive()
+   local l = compiler.l()
+   local it = l:grammar(l:seq(l:star(l:lit('a')), l:lit('a'))):create()
+   local outstr, match_success, matched_states = it:match_string("aa")
+   luaunit.assertEquals(outstr, "aa")
+   luaunit.assertTrue(match_success)
+   luaunit.assertEquals(matched_states, {})
+end

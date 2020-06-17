@@ -1,3 +1,11 @@
+--- An interpreter that takes a flattened
+--- list and transforms it into the
+--- "reified" data structure.
+local data_structures = require("pegreg.data_structures")
+
+local list = data_structures.list
+local reified = data_structures.reified
+
 local reify = {}
 
 reify.pair_mt = {}

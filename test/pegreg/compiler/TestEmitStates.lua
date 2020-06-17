@@ -63,3 +63,19 @@ function TestEmitStates:testStar()
    luaunit.assertTrue(match_success)
    luaunit.assertEquals(matched_states, {1, 1, 1, 1, 2})
 end
+
+function TestEmitStates:testAStarA()
+   print("Testing emit states (a*)a")
+   local l = l.l()
+   local reified = l:grammar(l:seq(l:star(l:lit('a')), l:lit('a')))
+      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
+
+   print("Reified is: ", reified)
+
+   local g = graph.graph.new()
+   local top = nfst_to_dfst.edge_list_to_graph(reified, g)
+   local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
+   local dfst = nfst_to_dfst.find_dfst_from_reachable(reachable, top_reachable, vertex_to_final)
+   print("dfst is:", dfst)
+   local it = emit_states.from_dfst(dfst)
+end
