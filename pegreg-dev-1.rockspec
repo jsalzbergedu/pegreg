@@ -43,7 +43,7 @@ build = {
       ["pegreg.compiler.emit_states"] = "src/pegreg/compiler/emit_states.lua",
       ["pegreg.compiler.compiler"] = "src/pegreg/compiler/compiler.lua"
       ["pegreg.data_structures"] = "src/pegreg/data_structures.lua",
-      ["pegreg.data_structures.reified"] = "src/pegreg/reified.lua",
+      ["pegreg.data_structures.nfst"] = "src/pegreg/nfst.lua",
    }
 }
 

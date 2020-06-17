@@ -7,25 +7,29 @@
 local interpreters = require("pegreg.interpreters")
 local graph = require("graph")
 
+local data_structures = require("pegreg.data_structures")
+local list = data_structures.list
+local nfst = data_structures.nfst
+
 local reify = interpreters.reify
 
 local nfst_to_dfst = {}
 
 function nfst_to_dfst.sort_reified(reified)
-   table.sort(reified.states)
-   table.sort(reified.arrows)
+   list.sort(reified.states)
+   list.sort(reified.arrows)
 end
 
 local function nub(lst)
-   local out = {}
+   local out = list.new()
    if #lst > 0 then
-      local prev = lst[1]
-      table.insert(out, lst[1])
+      local prev = lst:get(1)
+      list.insert(out, lst:get(1))
       for i = 2, #lst, 1 do
-         if prev ~= lst[i] then
-            table.insert(out, lst[i])
+         if prev ~= lst:get(i) then
+            list.insert(out, lst:get(i))
          end
-         prev = lst[i]
+         prev = lst:get(i)
       end
    end
    return out
@@ -34,9 +38,7 @@ end
 function nfst_to_dfst.nub(reified)
    nfst_to_dfst.sort_reified(reified)
    reified.states = nub(reified.states)
-   setmetatable(reified.states, reify.pair_mt)
    reified.arrows = nub(reified.arrows)
-   setmetatable(reified.arrows, reify.pair_mt)
    return reified
 end
 
@@ -46,17 +48,16 @@ end
 -- and return the top vertex in the graph.
 --------------------------------------------------------------------------------
 function nfst_to_dfst.edge_list_to_graph(reified, g)
+   reified.arrows:add(nfst.arrow.new(-1, 0, '', ''))
    nfst_to_dfst.sort_reified(reified)
    local number_to_vertex = {}
 
-   reified.arrows = reify.pair(reify.arrow(-1, 0, '', ''), reified.arrows)
-
-   local top = g:insert_vertex(reified.states[1])
-   number_to_vertex[reified.states[1].number] = top
+   local top = g:insert_vertex(reified.states:get(1))
+   number_to_vertex[reified.states:get(1).number] = top
 
    for i = 2, #reified.states, 1 do
-      local n = reified.states[i].number
-      number_to_vertex[n] = g:insert_vertex(reified.states[i])
+      local n = reified.states:get(i).number
+      number_to_vertex[n] = g:insert_vertex(reified.states:get(i))
    end
 
    for _, arrow in ipairs(reified.arrows) do
@@ -134,7 +135,6 @@ function nfst_to_dfst.reachable_g(g, top)
    local isfinal = {[1] = false}
    local vertex_to_final = {}
    nfst_to_dfst.reachable(top, reachable_top, transitions, isfinal)
-   -- table.insert(all_transitions, transitions)
    local out = reachable:insert_vertex(reachable_top)
    vertex_to_transitions[out] = transitions
    vertex_to_final[out] = isfinal[1]
@@ -181,7 +181,6 @@ end
 -- and whether the top vertex is final
 --------------------------------------------------------------------------------
 function nfst_to_dfst.find_dfst_from_reachable(reachable, top, vertex_to_final)
-   local pruned_reachable = graph.graph.new()
    local pruned_g, pruned_top = graph.spanning_tree(top)
    local vertex_to_state_number = {}
    local number_to_final = {}
@@ -197,7 +196,7 @@ function nfst_to_dfst.find_dfst_from_reachable(reachable, top, vertex_to_final)
       end
    end
 
-   local new_arrows = {}
+   local new_arrows = list.new()
 
    for vertex in pruned_g:verticies() do
       for other_vertex, edge in pairs(vertex.data.adjacencies) do
@@ -206,23 +205,18 @@ function nfst_to_dfst.find_dfst_from_reachable(reachable, top, vertex_to_final)
          local old_arrow = edge.data
          local input = old_arrow.input
          local output = old_arrow.output
-         local arrow = reify.arrow(from, to, input, output)[1]
-         table.insert(new_arrows, arrow)
+         local arrow = nfst.arrow.new(from, to, input, output)
+         new_arrows:add(arrow)
       end
    end
 
-   local new_states = {}
-   setmetatable(new_states, reify.pair_mt)
+   local new_states = list.new()
 
    for i = 0, n, 1 do
-      table.insert(new_states, reify.state(i, number_to_final[i])[1])
+      new_states:add(nfst.state.new(i, number_to_final[i]))
    end
 
-   table.sort(new_arrows)
-   new_arrows = nub(new_arrows)
-   setmetatable(new_arrows, reify.pair_mt)
-
-   return reify.create(new_states, new_arrows)
+   return nfst.nfst.new(new_states, new_arrows)
 end
 
 return nfst_to_dfst

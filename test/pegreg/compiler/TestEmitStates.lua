@@ -15,8 +15,6 @@ local mark_fin = pegreg.mark_fin
 local enumerate = pegreg.enumerate
 local state_arrow = pegreg.state_arrow
 local flatten = pegreg.flatten
-local print_n = pegreg.print_n
-local print_fst = pegreg.print_fst
 local reify = pegreg.reify
 
 TestEmitStates = {}

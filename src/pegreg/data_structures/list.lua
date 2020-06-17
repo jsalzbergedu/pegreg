@@ -6,7 +6,7 @@ local list = {}
 list.mt = {}
 
 function list.assert_list(lst)
-   assert(getmetatable(lst) == "lst", tostring(lst) .. "is not a list")
+   assert(getmetatable(lst) == list.mt, tostring(lst) .. "is not a list")
 end
 
 function list.mt.__tostring(lst)
@@ -21,6 +21,18 @@ function list.mt.__tostring(lst)
    return out
 end
 
+function list.mt.__len(lst)
+   return lst.maxn
+end
+
+function list.mt.__ipairs(lst)
+   return ipairs(lst.inner)
+end
+
+function list.mt.__pairs(lst)
+   return ipairs(lst.inner)
+end
+
 function list.get(lst, pos)
    return lst.inner[pos]
 end
@@ -31,23 +43,27 @@ function list.set(lst, pos, value)
 end
 
 function list.add(lst, item)
-   lst.inner[#(lst.inner) + 1] = item
+   lst.inner[lst.maxn + 1] = item
    lst.maxn = lst.maxn + 1
 end
 
-function list.new()
+function list.new(...)
    local lst = {}
    lst = setmetatable(lst, list.mt)
    lst.inner = {}
    -- Avoid iterating through table
    -- just to get maxn
-   lst.maxn = 1
+   lst.maxn = 0
    -- Add the indexing operations
    lst.get = list.get
    lst.set = list.set
    lst.add = list.add
    -- Everything else will be provided
    -- via wrappers to the list library
+   local args = table.pack(...)
+   for i = 1, args.n, 1 do
+      lst:add(args[i])
+   end
    return lst
 end
 

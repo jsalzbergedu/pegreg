@@ -5,16 +5,6 @@ local graph = require("graph")
 
 local nfst_to_dfst = pegreg.nfst_to_dfst
 
-local l = pegreg.language
-local expand_ref = pegreg.expand_ref
-local expand_string = pegreg.expand_string
-local add_left_right = pegreg.add_left_right
-local mark_fin = pegreg.mark_fin
-local enumerate = pegreg.enumerate
-local state_arrow = pegreg.state_arrow
-local flatten = pegreg.flatten
-local print_n = pegreg.print_n
-local print_fst = pegreg.print_fst
 local reify = pegreg.reify
 
 TestNFSTToDFST = {}
@@ -78,44 +68,10 @@ function TestNFSTToDFST:testReachable()
    end
    local expected_reachable = {}
    for i = 0, 3 do
-      table.insert(expected_reachable, reify.state(i, false)[1])
+      table.insert(expected_reachable, reify.state(i, false):get(1))
    end
    luaunit.assertEquals(reachable_data, expected_reachable)
    -- TODO test transitions table
-end
-
--- NFST with branching and redundant transitions
--- States: 0, 1, 2, 3, 4, 5, 6, 7
--- Final states: 7
--- Transitions:
--- from | to | tape
--- 0    | 1  | 0:0
--- 1    | 2  | 0:0
--- 1    | 3  | 0:0
--- 2    | 4  | a:a
--- 3    | 5  | b:b
--- 4    | 6  | 0:0
--- 5    | 6  | 0:0
--- 6    | 7  | 0:0
-local function make_redundant_nfst()
-   local p = reify.pair
-   local s = reify.state
-   local a = reify.arrow
-   local states = reify.null()
-   local arrows = reify.null()
-   for i = 0, 6 do
-      states = reify.pair(s(i, false), states)
-   end
-   states = p(s(7, true), states)
-   arrows = p(a(0, 1, '', ''), arrows)
-   arrows = p(a(1, 2, '', ''), arrows)
-   arrows = p(a(1, 3, '', ''), arrows)
-   arrows = p(a(2, 4, 'b', 'b'), arrows)
-   arrows = p(a(3, 5, 'b', 'b'), arrows)
-   arrows = p(a(4, 6, '', ''), arrows)
-   arrows = p(a(5, 6, '', ''), arrows)
-   arrows = p(a(6, 7, '', ''), arrows)
-   return reify.create(states, arrows)
 end
 
 -- NFST with branching and rejoining
