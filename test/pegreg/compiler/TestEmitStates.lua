@@ -74,6 +74,4 @@ function TestEmitStates:testAStarA()
    local top = nfst_to_dfst.edge_list_to_graph(reified, g)
    local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
    local dfst = nfst_to_dfst.find_dfst_from_reachable(reachable, top_reachable, vertex_to_final)
-   print("dfst is:", dfst)
-   local it = emit_states.from_dfst(dfst)
 end

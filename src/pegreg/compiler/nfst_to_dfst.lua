@@ -4,14 +4,11 @@
 -- Cleanup NFST_TO_DFST so that it doesn't use the graph library,
 -- or alternatively modify the graph library so that it doens't
 -- pull in so many dependencies.
-local interpreters = require("pegreg.interpreters")
 local graph = require("graph")
 
 local data_structures = require("pegreg.data_structures")
 local list = data_structures.list
 local nfst = data_structures.nfst
-
-local reify = interpreters.reify
 
 local nfst_to_dfst = {}
 
@@ -79,7 +76,7 @@ end
 -- Return REACHABLE.
 --------------------------------------------------------------------------------
 function nfst_to_dfst.reachable(vertex, reachable, transitions, isfinal)
-   table.insert(reachable, vertex)
+   reachable:add(vertex)
    -- TODO remove this check
    if isfinal ~= nil then
       isfinal[1] = isfinal[1] or vertex.data.final
@@ -90,9 +87,9 @@ function nfst_to_dfst.reachable(vertex, reachable, transitions, isfinal)
          nfst_to_dfst.reachable(other_vertex, reachable, transitions, isfinal)
       else
          if transitions[c] == nil then
-            transitions[c] = {}
+            transitions[c] = list.new()
          end
-         table.insert(transitions[c], edge)
+         transitions[c]:add(edge)
       end
    end
    return reachable
@@ -130,17 +127,17 @@ function nfst_to_dfst.reachable_g(g, top)
    local vertex_to_transitions = {}
    local reachable = graph.graph.new()
 
-   local reachable_top = {}
+   local reachable_from_top = list.new()
    local transitions = {}
    local isfinal = {[1] = false}
    local vertex_to_final = {}
-   nfst_to_dfst.reachable(top, reachable_top, transitions, isfinal)
-   local out = reachable:insert_vertex(reachable_top)
+   nfst_to_dfst.reachable(top, reachable_from_top, transitions, isfinal)
+   local out = reachable:insert_vertex(reachable_from_top)
    vertex_to_transitions[out] = transitions
    vertex_to_final[out] = isfinal[1]
 
    for vertex in g:verticies() do
-      local reachable_states = {}
+      local reachable_states = list.new()
       local transitions = {}
       local isfinal = {[1] = false}
       nfst_to_dfst.reachable(vertex, reachable_states, transitions, isfinal)
@@ -150,7 +147,7 @@ function nfst_to_dfst.reachable_g(g, top)
    end
 
    for vertex, transitions in pairs(vertex_to_transitions) do
-      for _, c, edge_list in opairs(transitions) do
+      for _, _, edge_list in opairs(transitions) do
          for _, edge in ipairs(edge_list) do
             local arrow = edge.data
             for other_vertex in reachable:verticies() do
@@ -178,7 +175,7 @@ end
 
 --------------------------------------------------------------------------------
 -- Find the DFST from the reachable graph, its top vertex,
--- and whether the top vertex is final
+-- and a map from each veterx to whether or not iti s final
 --------------------------------------------------------------------------------
 function nfst_to_dfst.find_dfst_from_reachable(reachable, top, vertex_to_final)
    local pruned_g, pruned_top = graph.spanning_tree(top)

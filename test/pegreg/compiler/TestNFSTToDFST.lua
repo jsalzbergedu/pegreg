@@ -3,6 +3,10 @@ local pegreg = require("pegreg")
 local luaunit = require("luaunit")
 local graph = require("graph")
 
+local data_structures = require("pegreg.data_structures")
+local list = data_structures.list
+
+
 local nfst_to_dfst = pegreg.nfst_to_dfst
 
 local reify = pegreg.reify
@@ -59,7 +63,7 @@ end
 function TestNFSTToDFST:testReachable()
    local g = graph.graph.new()
    local top = nfst_to_dfst.edge_list_to_graph(make_dummy_nfst(), g)
-   local reachable = {}
+   local reachable = list.new()
    local transitions = {}
    nfst_to_dfst.reachable(top, reachable, transitions)
    local reachable_data = {}

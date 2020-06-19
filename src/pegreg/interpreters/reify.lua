@@ -1,5 +1,4 @@
 local data_structures = require("pegreg.data_structures")
-
 local list = data_structures.list
 local nfst = data_structures.nfst
 
