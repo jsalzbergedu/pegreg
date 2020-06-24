@@ -141,3 +141,75 @@ function TestNFSTToDFSTFromReachable()
    local reified = nfst_to_dfst.find_dfst_from_reachable(reachable, top_reachable, vertex_to_final)
    print(reified)
 end
+
+-- NFST with branching and rejoining
+-- States: 0, 1, 2
+-- Final states: 2
+-- Transitions:
+-- from | to | tape
+-- 0    | 1  | 0:0
+-- 1    | 1  | a:a
+-- 1    | 2  | a:a
+local function make_astara()
+   local p = reify.pair
+   local s = reify.state
+   local a = reify.arrow
+   local states = reify.null()
+   local arrows = reify.null()
+   for i = 0, 1 do
+      states = reify.pair(s(i, false), states)
+   end
+   states = p(s(2, true), states)
+   arrows = p(a(0, 1, '', ''), arrows)
+   arrows = p(a(1, 1, 'a', 'a'), arrows)
+   arrows = p(a(1, 2, 'a', 'a'), arrows)
+   return reify.create(states, arrows)
+end
+
+function TestNFSTToDFST:testReifiedToNFA()
+   local reified = make_astara()
+   local nfa = nfst_to_dfst.reified_to_nfa(reified)
+   luaunit.assertEquals(nfa:start():number(), 0)
+   luaunit.assertEquals(nfa:start():final(), false)
+   luaunit.assertEquals(tostring(nfa:start().state), "(state 0 false)")
+   local state_it = nfa:states()
+   do
+      local state = state_it()
+      luaunit.assertEquals(state:number(), 0)
+      luaunit.assertEquals(state:final(), false)
+      luaunit.assertEquals(tostring(state.state), "(state 0 false)")
+   end
+   do
+      local state = state_it()
+      luaunit.assertEquals(state:number(), 1)
+      luaunit.assertEquals(state:final(), false)
+      luaunit.assertEquals(tostring(state.state), "(state 1 false)")
+   end
+   do
+      local state = state_it()
+      luaunit.assertEquals(state:number(), 2)
+      luaunit.assertEquals(state:final(), true)
+      luaunit.assertEquals(tostring(state.state), "(state 2 true)")
+   end
+   luaunit.assertEquals(state_it(), nil)
+   local arrow_it = nfa:arrows()
+   do
+      local arrow = arrow_it()
+      luaunit.assertEquals(arrow:from():number(), 0)
+      luaunit.assertEquals(arrow:to():number(), 1)
+      luaunit.assertEquals(arrow:input(), '')
+   end
+   do
+      local arrow = arrow_it()
+      luaunit.assertEquals(arrow:from():number(), 1)
+      luaunit.assertEquals(arrow:to():number(), 1)
+      luaunit.assertEquals(arrow:input(), 'a')
+   end
+   do
+      local arrow = arrow_it()
+      luaunit.assertEquals(arrow:from():number(), 1)
+      luaunit.assertEquals(arrow:to():number(), 2)
+      luaunit.assertEquals(arrow:input(), 'a')
+   end
+   luaunit.assertEquals(arrow_it(), nil)
+end

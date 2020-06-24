@@ -41,9 +41,11 @@ build = {
       ["pegreg.compiler"] = "src/pegreg/compiler.lua",
       ["pegreg.compiler.nfst_to_dfst"] = "src/pegreg/compiler/nfst_to_dfst.lua",
       ["pegreg.compiler.emit_states"] = "src/pegreg/compiler/emit_states.lua",
-      ["pegreg.compiler.compiler"] = "src/pegreg/compiler/compiler.lua"
+      ["pegreg.compiler.compiler"] = "src/pegreg/compiler/compiler.lua",
       ["pegreg.data_structures"] = "src/pegreg/data_structures.lua",
       ["pegreg.data_structures.nfst"] = "src/pegreg/nfst.lua",
+      ["pegreg.algorithms"] = "src/pegreg/algorithms.lua",
+      ["pegreg.algorithms.nfa_to_dfa"] = "src/pegreg/nfa_to_dfa.lua",
    }
 }
 

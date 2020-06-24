@@ -37,6 +37,18 @@ function list.get(lst, pos)
    return lst.inner[pos]
 end
 
+function list.mt.__eq(lst1, lst2)
+   if #lst1 < #lst2 then
+      return false
+   end
+   for i = 1, #lst1, 1 do
+      if lst1:get(i) ~= lst2:get(i) then
+         return false
+      end
+   end
+   return true
+end
+
 function list.set(lst, pos, value)
    assert(pos <= lst.maxn)
    lst.inner[pos] = value
