@@ -15,7 +15,7 @@ function TestCompiler:testCompilerOutput()
       local outstr, match_success, matched_states = it:match_string("bbx")
       luaunit.assertEquals(outstr, "bbx")
       luaunit.assertTrue(match_success)
-      luaunit.assertEquals(matched_states, {2, 4, 5})
+      luaunit.assertEquals(matched_states, {2, 3, 4})
 end
 
 function TestCompiler:testCompilerOutput2()
@@ -25,12 +25,12 @@ function TestCompiler:testCompilerOutput2()
       local outstr, match_success, matched_states = it:match_string("AJennings")
       luaunit.assertEquals(outstr, "AJennings")
       luaunit.assertTrue(match_success)
-      luaunit.assertEquals(matched_states, {1, 3, 5, 7, 9, 11, 12, 13, 14})
+      luaunit.assertEquals(matched_states, {1, 7, 8, 9, 10, 11, 12, 13, 14})
 
       local outstr, match_success, matched_states = it:match_string("JamieJennings")
       luaunit.assertEquals(outstr, "JamieJennings")
       luaunit.assertTrue(match_success)
-      luaunit.assertEquals(matched_states, {2, 4, 6, 8, 10, 3, 5, 7, 9, 11, 12, 13, 14})
+      luaunit.assertEquals(matched_states, {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14})
 end
 
 local very_large = [[
@@ -68,5 +68,5 @@ function TestCompiler:testStarNotPossesive()
    local outstr, match_success, matched_states = it:match_string("aa")
    luaunit.assertEquals(outstr, "aa")
    luaunit.assertTrue(match_success)
-   luaunit.assertEquals(matched_states, {})
+   luaunit.assertEquals(matched_states, {1, 1})
 end

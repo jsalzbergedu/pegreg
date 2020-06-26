@@ -7,8 +7,18 @@ local data_structures = require("pegreg.data_structures")
 local list = data_structures.list
 
 
+local nfa_to_dfa = pegreg.nfa_to_dfa
 local nfst_to_dfst = pegreg.nfst_to_dfst
 
+
+local l = pegreg.language
+local expand_ref = pegreg.expand_ref
+local expand_string = pegreg.expand_string
+local add_left_right = pegreg.add_left_right
+local mark_fin = pegreg.mark_fin
+local enumerate = pegreg.enumerate
+local state_arrow = pegreg.state_arrow
+local flatten = pegreg.flatten
 local reify = pegreg.reify
 
 TestNFSTToDFST = {}
@@ -18,12 +28,6 @@ function TestNFSTToDFST:testNub()
    print()
    print("Testing nub")
    print(nfst_to_dfst.nub(TestReify.make_reified()))
-end
-
-function TestNFSTToDFST:testEdgeListToGraph()
-   g = graph.graph.new()
-   local top = nfst_to_dfst.edge_list_to_graph(TestReify.make_reified(), g)
-   -- TODO insert more tests here
 end
 
 -- NFST with branching and redundant states:
@@ -58,24 +62,6 @@ local function make_dummy_nfst()
    arrows = p(a(5, 6, '', ''), arrows)
    arrows = p(a(6, 7, '', ''), arrows)
    return reify.create(states, arrows)
-end
-
-function TestNFSTToDFST:testReachable()
-   local g = graph.graph.new()
-   local top = nfst_to_dfst.edge_list_to_graph(make_dummy_nfst(), g)
-   local reachable = list.new()
-   local transitions = {}
-   nfst_to_dfst.reachable(top, reachable, transitions)
-   local reachable_data = {}
-   for _, v in ipairs(reachable) do
-      table.insert(reachable_data, v.data)
-   end
-   local expected_reachable = {}
-   for i = 0, 3 do
-      table.insert(expected_reachable, reify.state(i, false):get(1))
-   end
-   luaunit.assertEquals(reachable_data, expected_reachable)
-   -- TODO test transitions table
 end
 
 -- NFST with branching and rejoining
@@ -113,33 +99,31 @@ local function make_rejoining_nfst()
 end
 
 function TestNFSTToDFST:testDfstRejoining()
-   local g = graph.graph.new()
-   local top = nfst_to_dfst.edge_list_to_graph(make_rejoining_nfst(), g)
-   local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
-   local actual_dfst = nfst_to_dfst.find_dfst_from_reachable(reachable, top_reachable, vertex_to_final)
+   local nfst = make_rejoining_nfst()
+   local nfa = nfst_to_dfst.reified_to_nfa(nfst)
+   local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
 
-   local expected_dfst = [[
-(reified (states ((state 0 false) (state 1 false) (state 2 false) (state 3 true))) (arrows ((arrow 0 1 a a) (arrow 0 2 b b) (arrow 1 3 x x) (arrow 2 3 x x))))]]
-   luaunit.assertEquals(tostring(actual_dfst), expected_dfst)
-end
+   luaunit.assertEquals(dfa:size(), 4)
+   local states = {}
+   for state in dfa:states() do
+      table.insert(states, state:number())
+   end
 
-function TestNFSTToDFST:testReachableG()
-   print("Testing reachable G")
-   local g = graph.graph.new()
-   local top = nfst_to_dfst.edge_list_to_graph(make_rejoining_nfst(), g)
-   local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
-   -- If you want to see the generated graph,
-   -- uncomment the following line.
-   -- graph.plantuml(reachable)
-end
+   local arrows = {}
+   for arrow in dfa:arrows() do
+      table.insert(arrows, {arrow:from():number(),
+                            arrow:to():number(),
+                            arrow:input()})
+   end
 
-function TestNFSTToDFSTFromReachable()
-   print("Testing reachable G")
-   local g = graph.graph.new()
-   local top = nfst_to_dfst.edge_list_to_graph(make_rejoining_nfst(), g)
-   local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
-   local reified = nfst_to_dfst.find_dfst_from_reachable(reachable, top_reachable, vertex_to_final)
-   print(reified)
+   luaunit.assertEquals(states, {0, 1, 2, 3})
+   local arrow_expected = {
+      {0, 1, "a"},
+      {0, 2, "b"},
+      {2, 3, "x"},
+      {1, 3, "x"}
+   }
+   luaunit.assertEquals(arrows, arrow_expected)
 end
 
 -- NFST with branching and rejoining
@@ -212,4 +196,32 @@ function TestNFSTToDFST:testReifiedToNFA()
       luaunit.assertEquals(arrow:input(), 'a')
    end
    luaunit.assertEquals(arrow_it(), nil)
+end
+
+function TestNFSTToDFST:testAStarA()
+   print("Testing nfst->dfst states (a*)a")
+   local l = l.l()
+   local nfst = l:grammar(l:seq(l:star(l:lit('a')), l:lit('a')))
+      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
+   local nfa = nfst_to_dfst.reified_to_nfa(nfst)
+   local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
+
+   luaunit.assertEquals(dfa:size(), 2)
+   luaunit.assertEquals(dfa:start():number(), 0)
+   local arrow_it = dfa:outgoing(dfa:start())
+   local fst_arrow = arrow_it()
+   luaunit.assertEquals(fst_arrow:from():number(), 0)
+   luaunit.assertEquals(fst_arrow:to():number(), 1)
+   luaunit.assertEquals(fst_arrow:input(), 'a')
+   local snd_arrow = arrow_it()
+   luaunit.assertEquals(snd_arrow, nil)
+
+   local snd_state = fst_arrow:to()
+   luaunit.assertEquals(snd_state:number(), 1)
+   local snd_arrow_it = dfa:outgoing(snd_state)
+   local snd_state_fst_arrow = snd_arrow_it()
+   luaunit.assertEquals(snd_state_fst_arrow:from():number(), 1)
+   luaunit.assertEquals(snd_state_fst_arrow:to():number(), 1)
+   luaunit.assertEquals(snd_state_fst_arrow:input(), 'a')
+   luaunit.assertEquals(snd_arrow_it(), nil)
 end

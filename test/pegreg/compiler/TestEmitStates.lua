@@ -5,6 +5,7 @@ local graph = require("graph")
 
 local emit_states = pegreg.emit_states
 local nfst_to_dfst = pegreg.nfst_to_dfst
+local nfa_to_dfa = pegreg.nfa_to_dfa
 
 
 local l = pegreg.language
@@ -20,23 +21,23 @@ local reify = pegreg.reify
 TestEmitStates = {}
 
 function TestEmitStates:testEmitStatesOutput()
-   local g = graph.graph.new()
-   local top = nfst_to_dfst.edge_list_to_graph(TestReify.make_reified(), g)
-   local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
-   local dfst = nfst_to_dfst.find_dfst_from_reachable(reachable, top_reachable, vertex_to_final)
-   local it = emit_states.from_dfst(dfst)
+   local nfst = TestReify.make_reified()
+   local nfa = nfst_to_dfst.reified_to_nfa(nfst)
+   local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
+   local it = emit_states.from_abstract(dfa)
+
    local outstr, match_success, matched_states = it:match_string("bbx")
    luaunit.assertEquals(outstr, "bbx")
    luaunit.assertTrue(match_success)
-   luaunit.assertEquals(matched_states, {2, 4, 5})
+   luaunit.assertEquals(matched_states, {2, 3, 4})
    local outstr, match_success, matched_states = it:match_string("aax")
    luaunit.assertEquals(outstr, "aax")
    luaunit.assertTrue(match_success)
-   luaunit.assertEquals(matched_states, {1, 3, 5})
+   luaunit.assertEquals(matched_states, {1, 5, 4})
    local outstr, match_success, matched_states = it:match_string("aaxy")
    luaunit.assertEquals(outstr, "aax")
    luaunit.assertFalse(match_success)
-   luaunit.assertEquals(matched_states, {1, 3, 5, 6})
+   luaunit.assertEquals(matched_states, {1, 5, 4, 6})
    local outstr, match_success, matched_states = it:match_string("a")
    luaunit.assertEquals(outstr, "a")
    luaunit.assertFalse(match_success)
@@ -51,11 +52,10 @@ local function make_star()
 end
 
 function TestEmitStates:testStar()
-   local g = graph.graph.new()
-   local top = nfst_to_dfst.edge_list_to_graph(make_star(), g)
-   local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
-   local dfst = nfst_to_dfst.find_dfst_from_reachable(reachable, top_reachable, vertex_to_final)
-   local it = emit_states.from_dfst(dfst)
+   local nfst = make_star()
+   local nfa = nfst_to_dfst.reified_to_nfa(nfst)
+   local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
+   local it = emit_states.from_abstract(dfa)
    local outstr, match_success, matched_states = it:match_string("aaaab")
    luaunit.assertEquals(outstr, "aaaab")
    luaunit.assertTrue(match_success)
@@ -65,13 +65,14 @@ end
 function TestEmitStates:testAStarA()
    print("Testing emit states (a*)a")
    local l = l.l()
-   local reified = l:grammar(l:seq(l:star(l:lit('a')), l:lit('a')))
+   local nfst = l:grammar(l:seq(l:star(l:lit('a')), l:lit('a')))
       :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
 
-   print("Reified is: ", reified)
-
-   local g = graph.graph.new()
-   local top = nfst_to_dfst.edge_list_to_graph(reified, g)
-   local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
-   local dfst = nfst_to_dfst.find_dfst_from_reachable(reachable, top_reachable, vertex_to_final)
+   local nfa = nfst_to_dfst.reified_to_nfa(nfst)
+   local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
+   local it = emit_states.from_abstract(dfa)
+   local outstr, match_success, matched_states = it:match_string("aaaa")
+   luaunit.assertEquals(outstr, "aaaa")
+   luaunit.assertEquals(match_success, true)
+   luaunit.assertEquals(matched_states, {1, 1, 1, 1})
 end

@@ -15,9 +15,11 @@ local nfa_to_dfa = {}
 --     get all of the outgoing arrows of the
 --     nfa at state.
 --   nfa:states()
---     get all the states as a lua array of State
+--     get all the states as an iterator over States
+--   nfa:size()
+--     get the number of states in the nfa
 --   nfa:arrows()
---     get all the arrows as a lua array of Arrow
+--     get all the arrows as an iterator over Arrows
 --   nfa:start()
 --     get the start state of the nfa
 -- These are all abstract interfaces,
@@ -182,18 +184,17 @@ function nfa_to_dfa.determinize(nfa)
       end
       table.sort(outstate_character_list, function (a, b) return a.k < b.k end)
 
+      local count_iterations = 1
       for _, char_and_states in ipairs(outstate_character_list) do
          local outstate_list = char_and_states.outstate_list
+         local new_state = false
          if superstate_set_indexof(list_of_superstates, outstate_list) == -1 then
-            -- Compute the next state number
-            -- as one higher than the
-            -- current state and also offset
-            -- by all of the states added to the stack in this
-            -- iteration.
-            local next_state_number = #state_set_stack + i + 1
-            table.insert(state_set_stack, {next_state_number, outstate_list})
+            new_state = true
          end
          local sublist_index = superstate_add(list_of_superstates, outstate_list)
+         if new_state then
+            table.insert(state_set_stack, {sublist_index, outstate_list})
+         end
          table.insert(new_arrows, {i - 1, sublist_index - 1, char_and_states.k})
       end
    end
@@ -267,7 +268,7 @@ function nfa_to_dfa.decorate(list_of_superstates, new_arrows)
       end
       table.sort(outgoings,
                  function (a1, a2)
-                    return a1:to():number() < a2:to():number()
+                    return a1:input() < a2:input()
                  end)
    end
 
@@ -288,6 +289,10 @@ function nfa_to_dfa.decorate(list_of_superstates, new_arrows)
 
    function nfa_impl:start()
       return list_of_superstates[1]
+   end
+
+   function nfa_impl:size()
+      return #list_of_superstates
    end
 
    return setmetatable({list_of_superstates, new_arrows}, {__index = nfa_impl})

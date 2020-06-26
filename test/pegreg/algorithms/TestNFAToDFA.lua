@@ -86,6 +86,10 @@ local function abstract_from_basic(nfa)
       return make_it(nfa[1])
    end
 
+   function nfa_impl:size()
+      return #nfa[1]
+   end
+
    function nfa_impl:arrows()
       return make_it(nfa[2])
    end

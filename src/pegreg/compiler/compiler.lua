@@ -8,6 +8,7 @@ local state_arrow = require("pegreg.interpreters.state_arrow")
 local flatten = require("pegreg.interpreters.flatten")
 local reify = require("pegreg.interpreters.reify")
 local nfst_to_dfst = require("pegreg.compiler.nfst_to_dfst")
+local nfa_to_dfa = require("pegreg.algorithms.nfa_to_dfa")
 local emit_states = require("pegreg.compiler.emit_states")
 
 local graph = require("graph")
@@ -34,11 +35,9 @@ function compiler.l()
 
    function l:create()
       local reified = language:create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
-      local g = graph.graph.new()
-      local top = nfst_to_dfst.edge_list_to_graph(reified, g)
-      local reachable, top_reachable, vertex_to_final = nfst_to_dfst.reachable_g(g, top)
-      local dfst = nfst_to_dfst.find_dfst_from_reachable(reachable, top_reachable, vertex_to_final)
-      return emit_states.from_dfst(dfst)
+      local nfa = nfst_to_dfst.reified_to_nfa(reified)
+      local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
+      return emit_states.from_abstract(dfa)
    end
 
    function l:lit(str)
