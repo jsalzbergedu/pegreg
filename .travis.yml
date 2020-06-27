@@ -6,7 +6,7 @@ env:
 
 before_install:
   - pip install hererocks
-  - hererocks env install --$LUA -rlatest
+  - hererocks env --$LUA -rlatest
   - source env/bin/activate
   - git clone https://github.com/jsalzbergedu/fst-fast-system.git
   - git clone https://github.com/jsalzbergedu/fst-fast.git
