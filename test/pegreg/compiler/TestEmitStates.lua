@@ -1,7 +1,6 @@
 require("test.pegreg.interpreters.TestReify")
 local pegreg = require("pegreg")
 local luaunit = require("luaunit")
-local graph = require("graph")
 
 local emit_states = pegreg.emit_states
 local nfst_to_dfst = pegreg.nfst_to_dfst

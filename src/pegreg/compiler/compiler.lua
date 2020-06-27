@@ -11,8 +11,6 @@ local nfst_to_dfst = require("pegreg.compiler.nfst_to_dfst")
 local nfa_to_dfa = require("pegreg.algorithms.nfa_to_dfa")
 local emit_states = require("pegreg.compiler.emit_states")
 
-local graph = require("graph")
-
 local compiler = {}
 
 function compiler.l()

@@ -1,7 +1,6 @@
 require("test.pegreg.interpreters.TestReify")
 local pegreg = require("pegreg")
 local luaunit = require("luaunit")
-local graph = require("graph")
 
 local data_structures = require("pegreg.data_structures")
 local list = data_structures.list
