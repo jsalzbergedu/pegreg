@@ -1,31 +1,26 @@
 language: python
 sudo: false
 
-# Based on the .travis.yml config for Moses.
-
 env:
   - LUA="lua=5.2"
 
 before_install:
   - pip install hererocks
-  - hererocks lua_install -r^ --$LUA
-  - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
-  - source lua_install/bin/activate
+  - hererocks env install --$LUA -rlatest
+  - source env/bin/activate
   - git clone https://github.com/jsalzbergedu/fst-fast-system.git
   - git clone https://github.com/jsalzbergedu/fst-fast.git
-
-install:
   - pushd fst-fast-system
-  - luarocks build --tree=lua_install --local
+  - luarocks build
   - popd
   - pushd fst-fast
-  - luarocks build --tree=lua_install --local
+  - luarocks build
   - popd
-  - luarocks --tree=lua_install install luaunit
-  - luarocks --tree=lua_install install luafilesystem
+  - luarocks install luaunit
+  - luarocks install luafilesystem
+
+install:
+  - luarocks make
 
 script:
-  - luarocks --tree=lua_install test
-
-after_success:
-  - luacov-coveralls --exclude $TRAVIS_BUILD_DIR/lua_install
+  - luarocks test
