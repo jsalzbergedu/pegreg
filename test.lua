@@ -8,5 +8,4 @@ local pegreg = require("pegreg")
 -- Load the test suites
 require("test.Suites")
 
-
 os.exit(luaunit.LuaUnit.run())

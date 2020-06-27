@@ -184,7 +184,6 @@ function nfa_to_dfa.determinize(nfa)
       end
       table.sort(outstate_character_list, function (a, b) return a.k < b.k end)
 
-      local count_iterations = 1
       for _, char_and_states in ipairs(outstate_character_list) do
          local outstate_list = char_and_states.outstate_list
          local new_state = false

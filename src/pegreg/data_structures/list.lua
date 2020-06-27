@@ -104,10 +104,4 @@ function list.sort(lst, comp)
    return table.sort(lst.inner, comp)
 end
 
-for k, _ in pairs(table) do
-   if k ~= "unpack" and k ~= "pack" then
-      assert(list[k], tostring(k) .. " not in list")
-   end
-end
-
 return list
