@@ -3,5 +3,5 @@
 [![Lua](https://img.shields.io/badge/Lua-5.2%2C%205.3-blue.svg)]()
 
 # PEGREG
-A lua library for compiling a subset of PEGs to regular expressions.
+A lua library for compiling a subset of PEGs to FSTs.
 Requires fst-fast-system (an NFST interpreter) and fst-fast (a lua library wrapping fst-fast-system).
