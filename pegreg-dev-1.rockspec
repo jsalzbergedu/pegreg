@@ -52,7 +52,10 @@ build = {
 test_dependencies = {
    "luaunit >= 3",
    "luafilesystem >= 1.8",
-   "graphlua = dev-1"
+}
+
+dependencies = {
+
 }
 
 test = {

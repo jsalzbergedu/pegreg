@@ -1,0 +1,28 @@
+language: python
+sudo: false
+
+env:
+  - LUA="lua=5.2"
+
+before_install:
+  - pip install hererocks
+  - hererocks lua_install -r^ --$LUA
+  - export PATH=$PATH:$PWD/lua_install/bin # Add directory with all installed binaries to PATH
+  - git clone https://github.com/jsalzbergedu/fst-fast-system.git
+  - git clone https://github.com/jsalzbergedu/fst-fast.git
+
+install:
+  - pushd fst-fast-system
+  - luarocks build --local
+  - popd
+  - pushd fst-fast
+  - luarocks build --local
+  - popd
+  - luarocks install luaunit
+
+script:
+  - cd pegreg
+  - lua test.lua
+
+after_success:
+  - luacov-coveralls --exclude $TRAVIS_BUILD_DIR/lua_install
