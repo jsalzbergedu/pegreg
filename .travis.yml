@@ -16,15 +16,16 @@ before_install:
 
 install:
   - pushd fst-fast-system
-  - luarocks build --local
+  - luarocks build --tree=lua_install --local
   - popd
   - pushd fst-fast
-  - luarocks build --local
+  - luarocks build --tree=lua_install --local
   - popd
-  - luarocks install luaunit
+  - luarocks --tree=lua_install install luaunit
+  - luarocks --tree=lua_install install luafilesystem
 
 script:
-  - luarocks test
+  - luarocks --tree=lua_install test
 
 after_success:
   - luacov-coveralls --exclude $TRAVIS_BUILD_DIR/lua_install
