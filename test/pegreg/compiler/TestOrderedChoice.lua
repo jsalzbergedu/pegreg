@@ -75,6 +75,7 @@ end
 ---
 --- The removal algorithm will flag
 --- transition 2 as neccessary to delete,
+--- TODO transition 2 or BF (?)
 --- because it comes from B's nfa exclusively
 --- and occurs after the final A state has already
 --- been reached.

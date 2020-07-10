@@ -130,15 +130,20 @@ function TestDominators:fromEdges(edges)
    return setmetatable(edges, {__index = impl})
 end
 
+function TestDominators.example_graph()
+   local edges = {{0, 1}, {1, 2}, {1, 3}, {2, 7}, {3, 4}, {4, 5}, {4, 6},
+      {5, 7}, {6, 4}}
+   local graph = TestDominators:fromEdges(edges)
+   return graph
+end
+
 
 --------------------------------------------------------------------------------
 -- Based on networkx' test
 -- that uses the example from boost's graph library
 --------------------------------------------------------------------------------
 function TestDominators:testBoost()
-   local edges = {{0, 1}, {1, 2}, {1, 3}, {2, 7}, {3, 4}, {4, 5}, {4, 6},
-      {5, 7}, {6, 4}}
-   local graph = TestDominators:fromEdges(edges)
+   local graph = TestDominators.example_graph()
    local dominator_map = dominators.dominators(graph, 0)
 
    local expected = {
@@ -153,6 +158,4 @@ function TestDominators:testBoost()
    }
 
    luaunit.assertEquals(dominator_map, expected)
-
-   return edges
 end

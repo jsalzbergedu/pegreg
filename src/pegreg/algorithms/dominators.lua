@@ -175,4 +175,25 @@ function dominators.dominators(graph, node)
    return idom
 end
 
+--------------------------------------------------------------------------------
+-- Return whether X is dominated by Y
+--------------------------------------------------------------------------------
+function dominators.dominated_by(idom, x, y)
+   if x == y then
+      return true
+   end
+
+   while idom[x] ~= nil do
+      if x == idom[x] then
+         return false
+      end
+
+      if idom[x] == y then
+         return true
+      end
+      x = idom[x]
+   end
+   return false
+end
+
 return dominators
