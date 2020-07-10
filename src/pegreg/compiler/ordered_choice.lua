@@ -1,5 +1,9 @@
 -- Definitions:
 
+-- TODO rework this into DIODE transitions
+-- that act as EPSILON transitions with
+-- diminished priority
+
 -- If A is a number in the enumerated syntax tree,
 -- "portion of the NFA corresponding to A" is
 -- all of the states that comprise the subtree

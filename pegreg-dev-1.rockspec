@@ -47,6 +47,7 @@ build = {
       ["pegreg.data_structures.list"] = "src/pegreg/data_structures/list.lua",
       ["pegreg.algorithms"] = "src/pegreg/algorithms.lua",
       ["pegreg.algorithms.nfa_to_dfa"] = "src/pegreg/algorithms/nfa_to_dfa.lua",
+      ["pegreg.algorithms.dominators"] = "src/pegreg/algorithms/dominators.lua",
    }
 }
 

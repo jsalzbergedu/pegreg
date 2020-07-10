@@ -62,7 +62,6 @@ function TestEmitStates:testStar()
 end
 
 function TestEmitStates:testAStarA()
-   print("Testing emit states (a*)a")
    local l = l.l()
    local nfst = l:grammar(l:seq(l:star(l:lit('a')), l:lit('a')))
       :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
