@@ -1,10 +1,15 @@
 require("test.pegreg.algorithms.TestNFAToDFA")
 
 local luaunit = require("luaunit")
+local pegreg = require("pegreg")
+local nfa_to_dfa = pegreg.nfa_to_dfa
+local dominators = pegreg.dominators
+
+--- Tests for demoting unreachable states
+--- @global TestDemote
 TestDemote = {}
 
-function TestDemote:abstract_from_arrows(arrows)
-   local abstract = TestNFAToDFA:abstract_from_basic(arrows)
+function TestDemote:abstract_from_nfa(abstract)
    local impl = {}
 
    function impl:opposite(node, edge)
@@ -55,7 +60,7 @@ function TestDemote:abstract_from_arrows(arrows)
       table.sort(children, function (a, b) return a:number() < b:number() end)
       local idx = 1
       local function it()
-         if idx < #children then
+         if idx > #children then
             return nil
          end
          local out = children[idx]
@@ -74,8 +79,8 @@ function TestDemote:abstract_from_arrows(arrows)
    end
 
    local abstract_impl = getmetatable(abstract)
-   setmetatable(impl, {__index = abstract_impl})
-   return setmetatable(abstract, impl)
+   setmetatable(impl, {__index = abstract_impl.__index})
+   return setmetatable(abstract, {__index = impl})
 end
 
 -- Tests
@@ -87,8 +92,8 @@ function TestDemote:testAOrderedChoiceAAB()
    local af = 2
    local kf = 3
    local b0 = 4
-   local b1 = 6
-   local bf = 7
+   local b1 = 5
+   local bf = 6
    local arrows = {
       {
          {q0, false},
@@ -109,7 +114,26 @@ function TestDemote:testAOrderedChoiceAAB()
          {bf, kf, 'b'}
       }
    }
-   local abstract = TestDemote:abstract_from_arrows(arrows)
-end
+   local nfa = TestNFAToDFA:abstract_from_basic(arrows)
+   local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
+   local demotable = TestDemote:abstract_from_nfa(dfa)
 
-return TestDemote
+   local expected_demotable = {
+      {
+         {{q0, false}, {a0,false}, {b0, false}},
+         {{af, false}, {b1, false}},
+         {{bf, false}},
+         {{kf, true}},
+      },
+      {
+         {0, 1, "a"},
+         {1, 2, "a"},
+         {1, 3, "b"},
+         {2, 3, "b"},
+      }
+   }
+   luaunit.assertEquals(demotable, expected_demotable)
+
+   local idom = dominators.dominators(demotable, demotable:start())
+   return demotable, idom
+end
