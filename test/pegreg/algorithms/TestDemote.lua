@@ -199,4 +199,13 @@ function TestDemote:testAStarA()
       }
    }
    luaunit.assertEquals(demotable, expected_demotable)
+   local idom = dominators.dominators(demotable, demotable:start())
+   local af_state = arrows[1][af + 1]
+   local kf_state = nfa[1][kf + 1]
+   local kstates = {kf_state}
+   luaunit.assertEquals(demote.dfa_demotable(idom, dfa, dfa[1][1], af_state, kstates),
+                        {})
+   luaunit.assertEquals(demote.dfa_demotable(idom, dfa, dfa[1][2], af_state, kstates),
+                        {kf_state})
+
 end
