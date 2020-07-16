@@ -30,7 +30,7 @@ end
 -- {{0, 1, 'a'}, {1, 2, 'b'}, {3, 4, ''}, ...}
 -- and return an abstracted NFA.
 --------------------------------------------------------------------------------
-local function abstract_from_basic(nfa)
+function TestNFAToDFA:abstract_from_basic(nfa)
    local number_to_state = {}
    for _, state in ipairs(nfa[1]) do
       local state_impl = {}
@@ -107,7 +107,7 @@ local astara = {
    {{0, 1, ''}, {1, 1, 'a'}, {1, 2, 'a'}}
 }
 
-local abstract = abstract_from_basic(astara)
+local abstract = TestNFAToDFA:abstract_from_basic(astara)
 
 
 function TestNFAToDFA:testDeterminize()

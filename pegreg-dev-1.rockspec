@@ -48,6 +48,7 @@ build = {
       ["pegreg.algorithms"] = "src/pegreg/algorithms.lua",
       ["pegreg.algorithms.nfa_to_dfa"] = "src/pegreg/algorithms/nfa_to_dfa.lua",
       ["pegreg.algorithms.dominators"] = "src/pegreg/algorithms/dominators.lua",
+      ["pegreg.algorithms.demote"] = "src/pegreg/algorithms/demote.lua",
    }
 }
 
