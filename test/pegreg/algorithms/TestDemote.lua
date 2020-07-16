@@ -158,3 +158,45 @@ function TestDemote:testAOrderedChoiceAAB()
 
    return demotable, idom
 end
+
+-- (A*) K
+--  a*  a
+function TestDemote:testAStarA()
+   local q0 = 0
+   local a0 = 1
+   local af = 2
+   local k0 = 3
+   local kf = 4
+
+   local arrows = {
+      {
+         {q0, false},
+         {a0, false},
+         {af, false},
+         {k0, false},
+         {kf, true}
+      },
+      {
+         {q0, a0, ''},
+         {a0, af, 'a'},
+         {af, q0, ''},
+         {q0, k0, ''},
+         {k0, kf, 'a'}
+      }
+   }
+
+   local nfa = TestNFAToDFA:abstract_from_basic(arrows)
+   local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
+   local demotable = TestDemote:abstract_from_nfa(dfa)
+   local expected_demotable = {
+      {
+         {{q0, false}, {a0, false}, {k0, false}},
+         {{q0, false}, {a0, false}, {af, false}, {k0, false}, {kf, true}}
+      },
+      {
+         {0, 1, "a"},
+         {1, 1, "a"}
+      }
+   }
+   luaunit.assertEquals(demotable, expected_demotable)
+end
