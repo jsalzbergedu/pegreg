@@ -236,6 +236,16 @@ function nfa_to_dfa.decorate(list_of_superstates, new_arrows)
       function state_impl:final()
          return one_true
       end
+
+      function state_impl:contains(substate)
+         for _, state in ipairs(superstate) do
+            if substate:number() == state:number() then
+               return true
+            end
+         end
+         return false
+      end
+
       superstate = setmetatable(superstate, {__index = state_impl})
       number_to_state[superstate:number()] = superstate
    end

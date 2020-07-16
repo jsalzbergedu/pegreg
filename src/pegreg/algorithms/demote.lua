@@ -55,12 +55,13 @@ local dominators = require("pegreg.algorithms.dominators")
 local demote = {}
 
 --------------------------------------------------------------------------------
--- First query: is the state X dominated by A_F?
+-- First query: given an IDOM,
+-- is the state X is dominated by A_F?
 -- To answer this, find all DFA states
 -- that contain A_F.
 -- Then, check if X is dominated by any of these states.
 --------------------------------------------------------------------------------
-function demote.dfa_dominated(dfa, x, af)
+function demote.dfa_dominated(idom, dfa, x, af)
    local afs = {}
    for state in dfa:states() do
       if state:contains(af) then
@@ -68,7 +69,7 @@ function demote.dfa_dominated(dfa, x, af)
       end
    end
    for _, dominator in ipairs(afs) do
-      if dominators.dominated_by(x, dominator) then
+      if dominators.dominated_by(idom, x, dominator) then
          return true
       end
    end

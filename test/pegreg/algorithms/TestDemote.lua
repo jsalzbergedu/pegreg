@@ -4,6 +4,7 @@ local luaunit = require("luaunit")
 local pegreg = require("pegreg")
 local nfa_to_dfa = pegreg.nfa_to_dfa
 local dominators = pegreg.dominators
+local demote = pegreg.demote
 
 --- Tests for demoting unreachable states
 --- @global TestDemote
@@ -133,7 +134,14 @@ function TestDemote:testAOrderedChoiceAAB()
       }
    }
    luaunit.assertEquals(demotable, expected_demotable)
-
    local idom = dominators.dominators(demotable, demotable:start())
+
+   local af_state = nfa[1][af + 1]
+
+   luaunit.assertFalse(demote.dfa_dominated(idom, dfa, dfa[1][1], af_state))
+   luaunit.assertTrue(demote.dfa_dominated(idom, dfa, dfa[1][2], af_state))
+   luaunit.assertTrue(demote.dfa_dominated(idom, dfa, dfa[1][3], af_state))
+   luaunit.assertTrue(demote.dfa_dominated(idom, dfa, dfa[1][4], af_state))
+
    return demotable, idom
 end
