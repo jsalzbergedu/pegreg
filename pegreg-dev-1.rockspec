@@ -1,5 +1,6 @@
 package = "pegreg"
 version = "dev-1"
+rockspec_format = "3.0"
 source = {
    url = "git+https://github.com/jsalzbergedu/pegreg.git"
 }
