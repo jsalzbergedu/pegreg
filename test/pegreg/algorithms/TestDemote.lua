@@ -143,5 +143,18 @@ function TestDemote:testAOrderedChoiceAAB()
    luaunit.assertTrue(demote.dfa_dominated(idom, dfa, dfa[1][3], af_state))
    luaunit.assertTrue(demote.dfa_dominated(idom, dfa, dfa[1][4], af_state))
 
+   local b1_state = nfa[1][b1 + 1]
+   local bf_state = nfa[1][bf + 1]
+   local bstates = {b1_state, bf_state}
+
+   luaunit.assertEquals(demote.dfa_demotable(idom, dfa, dfa[1][1], af_state, bstates),
+                        {})
+   luaunit.assertEquals(demote.dfa_demotable(idom, dfa, dfa[1][2], af_state, bstates),
+                        {b1_state})
+   luaunit.assertEquals(demote.dfa_demotable(idom, dfa, dfa[1][3], af_state, bstates),
+                        {bf_state})
+   luaunit.assertEquals(demote.dfa_demotable(idom, dfa, dfa[1][4], af_state, bstates),
+                        {})
+
    return demotable, idom
 end

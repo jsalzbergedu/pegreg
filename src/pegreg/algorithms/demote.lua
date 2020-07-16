@@ -77,17 +77,19 @@ function demote.dfa_dominated(idom, dfa, x, af)
 end
 
 --------------------------------------------------------------------------------
--- Second query: which states in X are demotable (k or b dominated by A_F) state?
+-- Second query:
+-- Given IDOM,
+-- which states in X are demotable (k or b dominated by A_F) state?
 -- To answer this, we need an array of BSTATES.
 -- If the BSTATES are dominated by A_F, then we can demote them.
 -- Return an array of demotable substates
 --------------------------------------------------------------------------------
-function demote.dfa_demotable(dfa, x, af, bstates)
+function demote.dfa_demotable(idom, dfa, x, af, bstates)
    local demotable = {}
 
-   if demote.dfa_dominated(dfa, x, af) then
+   if demote.dfa_dominated(idom, dfa, x, af) then
       for _, state in ipairs(bstates) do
-         if x:conatins(state) and state:number() > 0 then
+         if x:contains(state) and state:number() > 0 then
             table.insert(demotable, state)
          end
       end
