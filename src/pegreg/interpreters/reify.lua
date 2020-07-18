@@ -12,14 +12,10 @@ local nfst = data_structures.nfst
 local reify = {}
 
 function reify.pair(fst, snd)
-   local out = list.new()
-   for _, v in ipairs(fst) do
-      out:add(v)
-   end
    for _, v in ipairs(snd) do
-      out:add(v)
+      fst:add(v)
    end
-   return out
+   return fst
 end
 
 function reify.state(n, final)
