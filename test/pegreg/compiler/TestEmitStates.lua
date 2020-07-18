@@ -3,7 +3,6 @@ local pegreg = require("pegreg")
 local luaunit = require("luaunit")
 
 local emit_states = pegreg.emit_states
-local nfst_to_dfst = pegreg.nfst_to_dfst
 local nfa_to_dfa = pegreg.nfa_to_dfa
 
 
@@ -15,13 +14,12 @@ local mark_fin = pegreg.mark_fin
 local enumerate = pegreg.enumerate
 local state_arrow = pegreg.state_arrow
 local flatten = pegreg.flatten
-local reify = pegreg.reify
+local reify2 = pegreg.reify2
 
 TestEmitStates = {}
 
 function TestEmitStates:testEmitStatesOutput()
-   local nfst = TestReify.make_reified()
-   local nfa = nfst_to_dfst.reified_to_nfa(nfst)
+   local nfa = TestReify.make_reified()
    local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
    local it = emit_states.from_abstract(dfa)
 
@@ -46,13 +44,12 @@ end
 local function make_star()
    local l = l.l()
    local reified = l:grammar(l:seq(l:star(l:lit('a')), l:lit('b')))
-      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
+      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify2)
    return reified
 end
 
 function TestEmitStates:testStar()
-   local nfst = make_star()
-   local nfa = nfst_to_dfst.reified_to_nfa(nfst)
+   local nfa = make_star()
    local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
    local it = emit_states.from_abstract(dfa)
    local outstr, match_success, matched_states = it:match_string("aaaab")
@@ -63,10 +60,9 @@ end
 
 function TestEmitStates:testAStarA()
    local l = l.l()
-   local nfst = l:grammar(l:seq(l:star(l:lit('a')), l:lit('a')))
-      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
+   local nfa = l:grammar(l:seq(l:star(l:lit('a')), l:lit('a')))
+      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify2)
 
-   local nfa = nfst_to_dfst.reified_to_nfa(nfst)
    local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
    local it = emit_states.from_abstract(dfa)
    local outstr, match_success, matched_states = it:match_string("aaaa")

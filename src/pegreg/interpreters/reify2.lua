@@ -1,33 +1,33 @@
 local data_structures = require("pegreg.data_structures")
 local list = data_structures.list
+local nfst = data_structures.nfst
 
-local nfst_to_dfst = {}
+--- An interpreter that takes
+--- the input DSL
+--- list and transforms it into the
+--- "nfst" data structure.
+---
+--- Its working type is a list, and
+--- its create type is an nfst.
+local reify = {}
 
-function nfst_to_dfst.sort_reified(reified)
-   list.sort(reified.states)
-   list.sort(reified.arrows)
-end
-
-local function nub(lst)
-   local out = list.new()
-   if #lst > 0 then
-      local prev = lst:get(1)
-      list.insert(out, lst:get(1))
-      for i = 2, #lst, 1 do
-         if prev ~= lst:get(i) then
-            list.insert(out, lst:get(i))
-         end
-         prev = lst:get(i)
-      end
+function reify.pair(fst, snd)
+   for _, v in ipairs(snd) do
+      fst:add(v)
    end
-   return out
+   return fst
 end
 
-function nfst_to_dfst.nub(reified)
-   nfst_to_dfst.sort_reified(reified)
-   reified.states = nub(reified.states)
-   reified.arrows = nub(reified.arrows)
-   return reified
+function reify.state(n, final)
+   return list.new(nfst.state.new(n, final))
+end
+
+function reify.arrow(from, to, input, output)
+   return list.new(nfst.arrow.new(from, to, input, output))
+end
+
+function reify.null()
+   return list.new()
 end
 
 --------------------------------------------------------------------------------
@@ -65,20 +65,41 @@ local function make_list_it(lst)
    return it
 end
 
---------------------------------------------------------------------------------
--- Take REIFIED, a reified set of states and arrows,
--- and create something that conforms to the
--- NFA interface defined in the file
--- nfa_to_dfa.lua
---------------------------------------------------------------------------------
-function nfst_to_dfst.reified_to_nfa(reified)
+local function nub(lst)
+   local out = list.new()
+   if #lst > 0 then
+      local prev = lst:get(1)
+      list.insert(out, lst:get(1))
+      for i = 2, #lst, 1 do
+         if prev ~= lst:get(i) then
+            list.insert(out, lst:get(i))
+         end
+         prev = lst:get(i)
+      end
+   end
+   return out
+end
+
+
+function reify.create(states, arrows)
    -- First, nub and sort
-   nfst_to_dfst.nub(reified)
+   list.sort(states)
+   list.sort(arrows)
+   states = nub(states)
+   arrows = nub(arrows)
+
+   -- Create the reified object,
+   -- which will contain the information
+   -- necessary to implement the NFA
+   -- interface
+   local reified = {}
+   reified[1] = states
+   reified[2] = arrows
 
    -- Now, make wrappers for all of the states
    local state_to_state_wrapper = {}
    local state_to_arrows = {}
-   for _, state in ipairs(reified.states) do
+   for _, state in ipairs(reified[1]) do
       local state_wrapper = {state = state}
       state_to_state_wrapper[state.number] = state_wrapper
       state_to_arrows[state.number] = {}
@@ -101,7 +122,7 @@ function nfst_to_dfst.reified_to_nfa(reified)
          end
       end
 
-      for _, arrow in ipairs(reified.arrows) do
+      for _, arrow in ipairs(reified[2]) do
          if arrow.from == state.number then
             table.insert(state_to_arrows[state.number], arrow)
          end
@@ -116,7 +137,7 @@ function nfst_to_dfst.reified_to_nfa(reified)
 
    -- Now, make wrappers for all the arrows
    local arrow_to_arrow_wrapper = {}
-   for _, arrow in ipairs(reified.arrows) do
+   for _, arrow in ipairs(reified[2]) do
       local arrow_wrapper = {arrow = arrow}
       arrow_to_arrow_wrapper[arrow] = arrow_wrapper
 
@@ -141,7 +162,7 @@ function nfst_to_dfst.reified_to_nfa(reified)
 
    -- Map states to arrow wrappers
    local state_to_arrow_wrapper = {}
-   for _, state in ipairs(reified.states) do
+   for _, state in ipairs(reified[1]) do
       local wrappers = {}
       state_to_arrow_wrapper[state.number] = wrappers
       for _, arrow in ipairs(state_to_arrows[state.number]) do
@@ -156,7 +177,7 @@ function nfst_to_dfst.reified_to_nfa(reified)
    end
 
    function nfa:states()
-      local it = make_list_it(reified.states)
+      local it = make_list_it(reified[1])
       local function wrapper()
          local v = it()
          return v and state_to_state_wrapper[v.number]
@@ -165,11 +186,11 @@ function nfst_to_dfst.reified_to_nfa(reified)
    end
 
    function nfa:size()
-      return #reified.states
+      return #reified[1]
    end
 
    function nfa:arrows()
-      local it = make_list_it(reified.arrows)
+      local it = make_list_it(reified[2])
       local function wrapper()
          local v = it()
          return v and arrow_to_arrow_wrapper[v]
@@ -178,10 +199,10 @@ function nfst_to_dfst.reified_to_nfa(reified)
    end
 
    function nfa:start()
-      return state_to_state_wrapper[reified.states:get(1).number]
+      return state_to_state_wrapper[reified[1]:get(1).number]
    end
 
-   return nfa
+   return setmetatable(reified, {__index = nfa})
 end
 
-return nfst_to_dfst
+return reify

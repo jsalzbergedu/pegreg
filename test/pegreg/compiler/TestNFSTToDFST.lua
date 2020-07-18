@@ -2,14 +2,7 @@ require("test.pegreg.interpreters.TestReify")
 local pegreg = require("pegreg")
 local luaunit = require("luaunit")
 
-local data_structures = require("pegreg.data_structures")
-local list = data_structures.list
-
-
 local nfa_to_dfa = pegreg.nfa_to_dfa
-local nfst_to_dfst = pegreg.nfst_to_dfst
-
-
 local l = pegreg.language
 local expand_ref = pegreg.expand_ref
 local expand_string = pegreg.expand_string
@@ -18,16 +11,10 @@ local mark_fin = pegreg.mark_fin
 local enumerate = pegreg.enumerate
 local state_arrow = pegreg.state_arrow
 local flatten = pegreg.flatten
-local reify = pegreg.reify
+local reify2 = pegreg.reify2
 
 TestNFSTToDFST = {}
 
-
-function TestNFSTToDFST:testNub()
-   print()
-   print("Testing nub")
-   print(nfst_to_dfst.nub(TestReify.make_reified()))
-end
 
 -- NFST with branching and redundant states:
 -- States: 0, 1, 2, 3, 4, 5, 6, 7
@@ -43,13 +30,13 @@ end
 -- 5    | 6  | 0:0
 -- 6    | 7  | 0:0
 local function make_dummy_nfst()
-   local p = reify.pair
-   local s = reify.state
-   local a = reify.arrow
-   local states = reify.null()
-   local arrows = reify.null()
+   local p = reify2.pair
+   local s = reify2.state
+   local a = reify2.arrow
+   local states = reify2.null()
+   local arrows = reify2.null()
    for i = 0, 6 do
-      states = reify.pair(s(i, false), states)
+      states = reify2.pair(s(i, false), states)
    end
    states = p(s(7, true), states)
    arrows = p(a(0, 1, '', ''), arrows)
@@ -60,7 +47,7 @@ local function make_dummy_nfst()
    arrows = p(a(4, 6, '', ''), arrows)
    arrows = p(a(5, 6, '', ''), arrows)
    arrows = p(a(6, 7, '', ''), arrows)
-   return reify.create(states, arrows)
+   return reify2.create(states, arrows)
 end
 
 -- NFST with branching and rejoining
@@ -77,13 +64,13 @@ end
 -- 5    | 6  | 0:0
 -- 6    | 7  | x:x
 local function make_rejoining_nfst()
-   local p = reify.pair
-   local s = reify.state
-   local a = reify.arrow
-   local states = reify.null()
-   local arrows = reify.null()
+   local p = reify2.pair
+   local s = reify2.state
+   local a = reify2.arrow
+   local states = reify2.null()
+   local arrows = reify2.null()
    for i = 0, 6 do
-      states = reify.pair(s(i, false), states)
+      states = reify2.pair(s(i, false), states)
    end
    states = p(s(7, true), states)
    arrows = p(a(0, 1, '', ''), arrows)
@@ -94,12 +81,11 @@ local function make_rejoining_nfst()
    arrows = p(a(4, 6, '', ''), arrows)
    arrows = p(a(5, 6, '', ''), arrows)
    arrows = p(a(6, 7, 'x', 'x'), arrows)
-   return reify.create(states, arrows)
+   return reify2.create(states, arrows)
 end
 
 function TestNFSTToDFST:testDfstRejoining()
-   local nfst = make_rejoining_nfst()
-   local nfa = nfst_to_dfst.reified_to_nfa(nfst)
+   local nfa = make_rejoining_nfst()
    local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
 
    luaunit.assertEquals(dfa:size(), 4)
@@ -134,24 +120,23 @@ end
 -- 1    | 1  | a:a
 -- 1    | 2  | a:a
 local function make_astara()
-   local p = reify.pair
-   local s = reify.state
-   local a = reify.arrow
-   local states = reify.null()
-   local arrows = reify.null()
+   local p = reify2.pair
+   local s = reify2.state
+   local a = reify2.arrow
+   local states = reify2.null()
+   local arrows = reify2.null()
    for i = 0, 1 do
-      states = reify.pair(s(i, false), states)
+      states = reify2.pair(s(i, false), states)
    end
    states = p(s(2, true), states)
    arrows = p(a(0, 1, '', ''), arrows)
    arrows = p(a(1, 1, 'a', 'a'), arrows)
    arrows = p(a(1, 2, 'a', 'a'), arrows)
-   return reify.create(states, arrows)
+   return reify2.create(states, arrows)
 end
 
 function TestNFSTToDFST:testReifiedToNFA()
-   local reified = make_astara()
-   local nfa = nfst_to_dfst.reified_to_nfa(reified)
+   local nfa = make_astara()
    luaunit.assertEquals(nfa:start():number(), 0)
    luaunit.assertEquals(nfa:start():final(), false)
    luaunit.assertEquals(tostring(nfa:start().state), "(state 0 false)")
@@ -200,9 +185,8 @@ end
 function TestNFSTToDFST:testAStarA()
    print("Testing nfst->dfst states (a*)a")
    local l = l.l()
-   local nfst = l:grammar(l:seq(l:star(l:lit('a')), l:lit('a')))
-      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
-   local nfa = nfst_to_dfst.reified_to_nfa(nfst)
+   local nfa = l:grammar(l:seq(l:star(l:lit('a')), l:lit('a')))
+      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify2)
    local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
 
    luaunit.assertEquals(dfa:size(), 2)

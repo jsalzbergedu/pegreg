@@ -17,6 +17,6 @@ interpreters.print_syntax = require("pegreg.interpreters.print_syntax")
 interpreters.remark_fin = require("pegreg.interpreters.remark_fin")
 interpreters.sc_to_cs = require("pegreg.interpreters.sc_to_cs")
 interpreters.state_arrow = require("pegreg.interpreters.state_arrow")
-interpreters.reify = require("pegreg.interpreters.reify")
+interpreters.reify2 = require("pegreg.interpreters.reify2")
 
 return interpreters
