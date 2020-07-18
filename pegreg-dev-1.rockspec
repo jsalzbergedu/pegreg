@@ -1,6 +1,7 @@
+rockspec_format = "3.0"
+
 package = "pegreg"
 version = "dev-1"
-rockspec_format = "3.0"
 source = {
    url = "git+https://github.com/jsalzbergedu/pegreg.git"
 }
@@ -12,7 +13,7 @@ A lua library for compiling a subset of PEGs to FSTs.
 Requires fst-fast-system (an NFST interpreter) and fst-fast (a lua library wrapping fst-fast-system).
 ]],
    homepage = "https://github.com/jsalzbergedu/pegreg",
-   license = "*** please specify a license ***"
+   license = "MIT"
 }
 build = {
    type = "builtin",
@@ -24,7 +25,6 @@ build = {
       ["pegreg.compiler.compiler"] = "src/pegreg/compiler/compiler.lua",
       ["pegreg.compiler.emit_states"] = "src/pegreg/compiler/emit_states.lua",
       ["pegreg.compiler"] = "src/pegreg/compiler/init.lua",
-      ["pegreg.compiler.nfst_to_dfst"] = "src/pegreg/compiler/nfst_to_dfst.lua",
       ["pegreg.data_structures"] = "src/pegreg/data_structures/init.lua",
       ["pegreg.data_structures.list"] = "src/pegreg/data_structures/list.lua",
       ["pegreg.data_structures.nfst"] = "src/pegreg/data_structures/nfst.lua",
