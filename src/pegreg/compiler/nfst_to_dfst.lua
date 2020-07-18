@@ -1,10 +1,3 @@
--- TODO: CLEANUP both Reify and NFST_TO_DFST so that there's
--- not so much breaking of abstraction (sharing metatables etc.)
--- Cleanup reify so that creating a list doesn't have polynomial behavior.
--- Cleanup NFST_TO_DFST so that it doesn't use the graph library,
--- or alternatively modify the graph library so that it doens't
--- pull in so many dependencies.
-
 local data_structures = require("pegreg.data_structures")
 local list = data_structures.list
 

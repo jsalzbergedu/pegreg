@@ -6,6 +6,8 @@ local nfa_to_dfa = {}
 -- State has the following methods
 --   state:number() get the states number
 --   state:final() get whether the state is final
+--   state:contains() return whether the state contains the substate
+--   state:substates() return an iterator over the substates of the state
 -- Arrow has the following methods
 --   arrow:from() gets the State that it is from
 --   arrow:to() gets the State that it is to
@@ -244,6 +246,10 @@ function nfa_to_dfa.decorate(list_of_superstates, new_arrows)
             end
          end
          return false
+      end
+
+      function state_impl:substates()
+         return make_it(superstate)
       end
 
       superstate = setmetatable(superstate, {__index = state_impl})
