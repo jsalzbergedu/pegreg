@@ -14,7 +14,7 @@ local mark_fin = pegreg.mark_fin
 local enumerate = pegreg.enumerate
 local state_arrow = pegreg.state_arrow
 local flatten = pegreg.flatten
-local reify2 = pegreg.reify2
+local reify = pegreg.reify
 
 TestEmitStates = {}
 
@@ -44,7 +44,7 @@ end
 local function make_star()
    local l = l.l()
    local reified = l:grammar(l:seq(l:star(l:lit('a')), l:lit('b')))
-      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify2)
+      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
    return reified
 end
 
@@ -61,7 +61,7 @@ end
 function TestEmitStates:testAStarA()
    local l = l.l()
    local nfa = l:grammar(l:seq(l:star(l:lit('a')), l:lit('a')))
-      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify2)
+      :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
 
    local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
    local it = emit_states.from_abstract(dfa)

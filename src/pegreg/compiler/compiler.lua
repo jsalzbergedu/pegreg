@@ -1,5 +1,5 @@
 local language = require("pegreg.frontends.language")
-local reify2 = require("pegreg.interpreters.reify2")
+local reify = require("pegreg.interpreters.reify")
 local expand_ref = require("pegreg.interpreters.expand_ref")
 local expand_string = require("pegreg.interpreters.expand_string")
 local add_left_right = require("pegreg.interpreters.add_left_right")
@@ -31,7 +31,7 @@ function compiler.l()
    end
 
    function l:create()
-      local nfa = language:create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify2)
+      local nfa = language:create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(reify)
       local dfa = nfa_to_dfa.decorate(nfa_to_dfa.determinize(nfa))
       return emit_states.from_abstract(dfa)
    end
