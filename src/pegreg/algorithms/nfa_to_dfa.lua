@@ -6,7 +6,7 @@ local nfa_to_dfa = {}
 -- State has the following methods
 --   state:number() get the states number
 --   state:final() get whether the state is final
---   state:contains() return whether the state contains the substate
+--   state:contains(substate) return whether the state contains the substate
 --   state:substates() return an iterator over the substates of the state
 -- Arrow has the following methods
 --   arrow:from() gets the State that it is from

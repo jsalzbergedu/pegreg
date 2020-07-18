@@ -86,8 +86,19 @@ function nfst_to_dfst.reified_to_nfa(reified)
       function state_wrapper:number()
          return self.state.number
       end
+
       function state_wrapper:final()
          return self.state.final
+      end
+
+      function state_wrapper:contains()
+         return false
+      end
+
+      function state_wrapper:substates()
+         return function ()
+            return nil
+         end
       end
 
       for _, arrow in ipairs(reified.arrows) do
