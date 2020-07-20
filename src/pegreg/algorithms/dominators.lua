@@ -1,26 +1,11 @@
-local dominators = {}
+--------------------------------------------------------------------------------
+-- Dominator finding algorithm adapted from the networkx library.
+--------------------------------------------------------------------------------
 
--- This algorithm takes graphs with the following interface:
--- graph:opposite(node, edge)
---   given a NODE and an EDGE, return the node in the
---   EDGE that is not NODE.
--- graph:incoming_edges(node)
---   given a NODE, find the incoming edges to NODE.
--- graph:contains(node)
---   given a NODE, return whether the graph contains the NODE
--- graph:children(node)
---   given a NODE, find the children of the said node
--- graph:edges()
---   return an iterator over all of the edges of the graph
---   where each edge has the methods edge:from() and edge:to()
--- graph:verticies()
---   return an iterator over all of the verticies of the graph
--- graph:start()
---   return a starting vertex for the graph
---
--- the NODEs themselves must be
--- #1: Hashable
--- #2: Comparable via ~= and =
+--- Module containing funcitons for finding dominators.
+--- The graphs used by this algorithm must conform to the interface specified
+--- in @see Graph.
+local dominators = {}
 
 local function preds(graph, node)
    local arr = {}
