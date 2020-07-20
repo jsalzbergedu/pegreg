@@ -46,8 +46,8 @@ function TestReify:testStateEq()
 end
 
 function TestReify:testArrowEq()
-   local arrow1 = reify.arrow(1, 2, 'a', 'a')[1]
-   local arrow2 = reify.arrow(1, 3, 'a', 'a')[1]
+   local arrow1 = reify.arrow(1, 2, 'a')[1]
+   local arrow2 = reify.arrow(1, 3, 'a')[1]
    luaunit.assertNotEquals(arrow1, arrow2)
 end
 
@@ -77,8 +77,8 @@ local function make_dummy_nfst()
    arrows = p(a(0, 1, '', ''), arrows)
    arrows = p(a(1, 2, '', ''), arrows)
    arrows = p(a(1, 3, '', ''), arrows)
-   arrows = p(a(2, 4, 'a', 'a'), arrows)
-   arrows = p(a(3, 5, 'b', 'b'), arrows)
+   arrows = p(a(2, 4, 'a'), arrows)
+   arrows = p(a(3, 5, 'b'), arrows)
    arrows = p(a(4, 6, '', ''), arrows)
    arrows = p(a(5, 6, '', ''), arrows)
    arrows = p(a(6, 7, '', ''), arrows)

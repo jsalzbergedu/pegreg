@@ -45,7 +45,7 @@ end
 --- @param from number
 --- @param to number
 --- @param input string
-function reify.arrow(from, to, input, _)
+function reify.arrow(from, to, input)
    return {
       {
          from = from,
@@ -187,12 +187,6 @@ function reify.create(states, arrows)
       function arrow_wrapper:input()
          return self.arrow.input
       end
-
-      -- TODO For now this library will not expose
-      -- the arrow's output.
-      -- not sure the implications,
-      -- but preferably the output should be
-      -- exposed.
    end
 
    -- Map states to arrow wrappers
