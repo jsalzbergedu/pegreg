@@ -80,7 +80,8 @@ local function nub(lst)
    return out
 end
 
-
+--- Create an NFA from states and arrows
+--- @return NFA reified the reified NFA
 function reify.create(states, arrows)
    -- First, nub and sort
    list.sort(states)
