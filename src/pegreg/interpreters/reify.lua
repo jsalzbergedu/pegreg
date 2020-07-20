@@ -1,5 +1,4 @@
 local data_structures = require("pegreg.data_structures")
-local nfst = data_structures.nfst
 
 --- An interpreter that takes
 --- the input DSL
