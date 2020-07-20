@@ -1,5 +1,4 @@
 rockspec_format = "3.0"
-
 package = "pegreg"
 version = "dev-1"
 source = {
@@ -13,7 +12,7 @@ A lua library for compiling a subset of PEGs to FSTs.
 Requires fst-fast-system (an NFST interpreter) and fst-fast (a lua library wrapping fst-fast-system).
 ]],
    homepage = "https://github.com/jsalzbergedu/pegreg",
-   license = "MIT"
+   license = "*** please specify a license ***"
 }
 build = {
    type = "builtin",
@@ -22,12 +21,11 @@ build = {
       ["pegreg.algorithms.dominators"] = "src/pegreg/algorithms/dominators.lua",
       ["pegreg.algorithms"] = "src/pegreg/algorithms/init.lua",
       ["pegreg.algorithms.nfa_to_dfa"] = "src/pegreg/algorithms/nfa_to_dfa.lua",
+      ["pegreg.api.graph"] = "src/pegreg/api/graph.lua",
+      ["pegreg.api.nfa"] = "src/pegreg/api/nfa.lua",
       ["pegreg.compiler.compiler"] = "src/pegreg/compiler/compiler.lua",
       ["pegreg.compiler.emit_states"] = "src/pegreg/compiler/emit_states.lua",
       ["pegreg.compiler"] = "src/pegreg/compiler/init.lua",
-      ["pegreg.data_structures"] = "src/pegreg/data_structures/init.lua",
-      ["pegreg.data_structures.list"] = "src/pegreg/data_structures/list.lua",
-      ["pegreg.data_structures.nfst"] = "src/pegreg/data_structures/nfst.lua",
       ["pegreg.frontends.fst_language"] = "src/pegreg/frontends/fst_language.lua",
       ["pegreg.frontends"] = "src/pegreg/frontends/init.lua",
       ["pegreg.frontends.language"] = "src/pegreg/frontends/language.lua",
@@ -50,7 +48,9 @@ build = {
       ["pegreg.interpreters.reify"] = "src/pegreg/interpreters/reify.lua",
       ["pegreg.interpreters.remark_fin"] = "src/pegreg/interpreters/remark_fin.lua",
       ["pegreg.interpreters.sc_to_cs"] = "src/pegreg/interpreters/sc_to_cs.lua",
-      ["pegreg.interpreters.state_arrow"] = "src/pegreg/interpreters/state_arrow.lua"
+      ["pegreg.interpreters.state_arrow"] = "src/pegreg/interpreters/state_arrow.lua",
+      ["pegreg.util.array"] = "src/pegreg/util/array.lua",
+      ["pegreg.util"] = "src/pegreg/util/init.lua"
    }
 }
 
