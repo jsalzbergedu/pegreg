@@ -33,27 +33,6 @@ end
 --- @param n number The number of the state
 --- @param final boolean whether the state is final
 function reify.state(n, final)
-   -- local out = {}
-   -- out.__n = n
-   -- out.__final = final
-   -- function out:number()
-   --    return self.__n
-   -- end
-
-   -- function out:final()
-   --    return self.__final
-   -- end
-
-   -- function out:substates()
-   --    return function ()
-   --       return nil
-   --    end
-   -- end
-
-   -- function out:contains(_)
-   --    return false
-   -- end
-   -- return {out}
    return {
       {
          number = n,
@@ -67,24 +46,6 @@ end
 --- @param to number
 --- @param input string
 function reify.arrow(from, to, input, _)
-   -- local out = {}
-   -- out.__from = from
-   -- out.__to = to
-   -- out.__input = input
-
-   -- function out:from()
-   --    return self.__from
-   -- end
-
-   -- function out:to()
-   --    return self.__to
-   -- end
-
-   -- function out:input()
-   --    return self.__input
-   -- end
-
-   -- return {out}
    return {
       {
          from = from,
