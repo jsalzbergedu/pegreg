@@ -1,5 +1,4 @@
 local data_structures = require("pegreg.data_structures")
-local list = data_structures.list
 local nfst = data_structures.nfst
 
 --- An interpreter that takes
@@ -13,21 +12,21 @@ local reify = {}
 
 function reify.pair(fst, snd)
    for _, v in ipairs(snd) do
-      fst:add(v)
+      table.insert(fst, v)
    end
    return fst
 end
 
 function reify.state(n, final)
-   return list.new(nfst.state.new(n, final))
+   return {nfst.state.new(n, final)}
 end
 
 function reify.arrow(from, to, input, output)
-   return list.new(nfst.arrow.new(from, to, input, output))
+   return {nfst.arrow.new(from, to, input, output)}
 end
 
 function reify.null()
-   return list.new()
+   return {}
 end
 
 --------------------------------------------------------------------------------
@@ -55,7 +54,7 @@ local function make_list_it(lst)
    local idx = 1
    local function it()
       if idx <= #lst then
-         local out = lst:get(idx)
+         local out = lst[idx]
          idx = idx + 1
          return out
       else
@@ -66,26 +65,25 @@ local function make_list_it(lst)
 end
 
 local function nub(lst)
-   local out = list.new()
+   local out = {}
    if #lst > 0 then
-      local prev = lst:get(1)
-      list.insert(out, lst:get(1))
+      local prev = lst[1]
+      table.insert(out, lst[1])
       for i = 2, #lst, 1 do
-         if prev ~= lst:get(i) then
-            list.insert(out, lst:get(i))
+         if prev ~= lst[i] then
+            table.insert(out, lst[i])
          end
-         prev = lst:get(i)
+         prev = lst[i]
       end
    end
    return out
 end
 
---- Create an NFA from states and arrows
---- @return NFA reified the reified NFA
+
 function reify.create(states, arrows)
    -- First, nub and sort
-   list.sort(states)
-   list.sort(arrows)
+   table.sort(states)
+   table.sort(arrows)
    states = nub(states)
    arrows = nub(arrows)
 
@@ -200,7 +198,7 @@ function reify.create(states, arrows)
    end
 
    function nfa:start()
-      return state_to_state_wrapper[reified[1]:get(1).number]
+      return state_to_state_wrapper[reified[1][1].number]
    end
 
    return setmetatable(reified, {__index = nfa})
