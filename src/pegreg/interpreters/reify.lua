@@ -6,10 +6,22 @@ local nfst = data_structures.nfst
 --- list and transforms it into the
 --- "nfst" data structure.
 ---
---- Its working type is a list, and
---- its create type is an nfst.
+--- Its working type is a lua array,
+--- its create type is an implementation
+--- of the nfa interface.
+---  @see NFA
 local reify = {}
 
+--- Implement pair by taking the first and second
+--- arrays of objects and concatenating values
+--- of the second table to the first table.
+--- Technically breaks subtyping by requiring
+--- both fst and snd to have an array rather than
+--- tree structure, so be sure to use flatten first.
+--- @generic T
+--- @param fst T[] The first lua array of elements
+--- @param snd T[] The second lua array of elements
+--- @return T[] pair the two tables, concatenated
 function reify.pair(fst, snd)
    for _, v in ipairs(snd) do
       table.insert(fst, v)
@@ -17,14 +29,72 @@ function reify.pair(fst, snd)
    return fst
 end
 
+--- Reify the information relating to states.
+--- @param n number The number of the state
+--- @param final boolean whether the state is final
 function reify.state(n, final)
-   return {nfst.state.new(n, final)}
+   -- local out = {}
+   -- out.__n = n
+   -- out.__final = final
+   -- function out:number()
+   --    return self.__n
+   -- end
+
+   -- function out:final()
+   --    return self.__final
+   -- end
+
+   -- function out:substates()
+   --    return function ()
+   --       return nil
+   --    end
+   -- end
+
+   -- function out:contains(_)
+   --    return false
+   -- end
+   -- return {out}
+   return {
+      {
+         number = n,
+         final = final
+      }
+   }
 end
 
-function reify.arrow(from, to, input, output)
-   return {nfst.arrow.new(from, to, input, output)}
+--- Reify the information relating to arrows.
+--- @param from number
+--- @param to number
+--- @param input string
+function reify.arrow(from, to, input, _)
+   -- local out = {}
+   -- out.__from = from
+   -- out.__to = to
+   -- out.__input = input
+
+   -- function out:from()
+   --    return self.__from
+   -- end
+
+   -- function out:to()
+   --    return self.__to
+   -- end
+
+   -- function out:input()
+   --    return self.__input
+   -- end
+
+   -- return {out}
+   return {
+      {
+         from = from,
+         to = to,
+         input = input
+      }
+   }
 end
 
+--- Reify a null at the end of a list
 function reify.null()
    return {}
 end
@@ -82,8 +152,13 @@ end
 
 function reify.create(states, arrows)
    -- First, nub and sort
-   table.sort(states)
-   table.sort(arrows)
+   table.sort(states, function (a, b) return a.number < b.number end)
+   table.sort(arrows, function (a, b)
+                        if a.from == b.from then
+                           return a.to < b.to
+                        end
+                        return a.from < b.from
+                      end)
    states = nub(states)
    arrows = nub(arrows)
 
