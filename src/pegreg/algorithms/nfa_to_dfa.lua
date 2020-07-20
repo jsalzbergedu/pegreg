@@ -1,4 +1,6 @@
 local nfa_to_dfa = {}
+local array = require("pegreg.util.array")
+local make_it = array.make_it
 
 -- NFA expected interface:
 -- Base types: State, Arrow
@@ -200,23 +202,6 @@ function nfa_to_dfa.determinize(nfa)
       end
    end
    return list_of_superstates, new_arrows
-end
-
---------------------------------------------------------------------------------
--- Given an array, make an iterator over it
---------------------------------------------------------------------------------
-local function make_it(arr)
-   local idx = 1
-   local function it()
-      if idx <= #arr then
-         local out = arr[idx]
-         idx = idx + 1
-         return out
-      else
-         return nil
-      end
-   end
-   return it
 end
 
 --------------------------------------------------------------------------------

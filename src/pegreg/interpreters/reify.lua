@@ -1,5 +1,3 @@
-local data_structures = require("pegreg.data_structures")
-
 --- An interpreter that takes
 --- the input DSL
 --- list and transforms it into the
@@ -10,6 +8,9 @@ local data_structures = require("pegreg.data_structures")
 --- of the nfa interface.
 ---  @see NFA
 local reify = {}
+
+local array = require("pegreg.util.array")
+local make_it = array.make_it
 
 --- Implement pair by taking the first and second
 --- arrays of objects and concatenating values
@@ -57,41 +58,6 @@ end
 --- Reify a null at the end of a list
 function reify.null()
    return {}
-end
-
---------------------------------------------------------------------------------
--- Given an array, make an iterator over it
--- TODO move this to a utility file
---------------------------------------------------------------------------------
-local function make_it(arr)
-   local idx = 1
-   local function it()
-      if idx <= #arr then
-         local out = arr[idx]
-         idx = idx + 1
-         return out
-      else
-         return nil
-      end
-   end
-   return it
-end
-
---------------------------------------------------------------------------------
--- TODO Move this as well
---------------------------------------------------------------------------------
-local function make_list_it(lst)
-   local idx = 1
-   local function it()
-      if idx <= #lst then
-         local out = lst[idx]
-         idx = idx + 1
-         return out
-      else
-         return nil
-      end
-   end
-   return it
 end
 
 local function nub(lst)
@@ -205,7 +171,7 @@ function reify.create(states, arrows)
    end
 
    function nfa:states()
-      local it = make_list_it(reified[1])
+      local it = make_it(reified[1])
       local function wrapper()
          local v = it()
          return v and state_to_state_wrapper[v.number]
@@ -218,7 +184,7 @@ function reify.create(states, arrows)
    end
 
    function nfa:arrows()
-      local it = make_list_it(reified[2])
+      local it = make_it(reified[2])
       local function wrapper()
          local v = it()
          return v and arrow_to_arrow_wrapper[v]

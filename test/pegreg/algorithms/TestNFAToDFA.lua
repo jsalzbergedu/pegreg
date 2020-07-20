@@ -1,25 +1,9 @@
 local pegreg = require("pegreg")
 local nfa_to_dfa = pegreg.nfa_to_dfa
+local make_it = pegreg.make_it
 local luaunit = require("luaunit")
 
 TestNFAToDFA = {}
-
---------------------------------------------------------------------------------
--- Make an iterator on the array arr
---------------------------------------------------------------------------------
-local function make_it(arr)
-   local idx = 1
-   local function it()
-      if idx <= #arr then
-         local out = arr[idx]
-         idx = idx + 1
-         return out
-      else
-         return nil
-      end
-   end
-   return it
-end
 
 --------------------------------------------------------------------------------
 -- Take an NFA of the form
