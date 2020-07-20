@@ -64,7 +64,7 @@ function create_arrows.e()
    return function (s, f)
       local function empty_arrow(previous)
          return function (current)
-            return s.arrow(previous, current, '', '')
+            return s.arrow(previous, current,  '')
          end
       end
       return f(empty_arrow,
@@ -76,7 +76,7 @@ function create_arrows.lit(lit)
    return function (s, f)
       local function lit_arrow(previous)
          return function (current)
-            return s.arrow(previous, current, lit, lit)
+            return s.arrow(previous, current, lit)
          end
       end
       return f(lit_arrow,
@@ -95,7 +95,7 @@ function create_arrows.seq(rule1, rule2)
       local function seq_arrow(previous)
          return function (current)
             -- Go from previous to current
-            local arrows_out = s.pair(s.arrow(previous, current, '', ''),
+            local arrows_out = s.pair(s.arrow(previous, current, ''),
                                       s.null())
             -- Go from current to left
             arrows_out = s.pair(arrows_1(current), arrows_out)
@@ -117,7 +117,7 @@ function create_arrows.left(item)
       local function left_arrow(previous)
          return function (current)
             local arrows, _ = item(s, extract)
-            local out = s.pair(s.arrow(previous, current, '', ''), s.null())
+            local out = s.pair(s.arrow(previous, current, ''), s.null())
             out = s.pair(arrows(current), out)
             return out
          end
@@ -133,7 +133,7 @@ function create_arrows.right(item)
       local function right_arrow(previous)
          return function (current)
             local arrows, _ = item(s, extract)
-            local out = s.pair(s.arrow(previous, current, '', ''), s.null())
+            local out = s.pair(s.arrow(previous, current, ''), s.null())
             out = s.pair(arrows(current), out)
             return out
          end
@@ -174,7 +174,7 @@ function create_arrows.choice(rule1, rule2)
       local function seq_arrow(previous)
          return function (current)
             -- Go from previous to current
-            local arrows_out = s.pair(s.arrow(previous, current, '', ''),
+            local arrows_out = s.pair(s.arrow(previous, current, ''),
                                       s.null())
             -- Go from current to left
             arrows_out = s.pair(arrows_1(current), arrows_out)
@@ -193,7 +193,7 @@ function create_arrows.star(rule)
       local function star_arrow(previous)
          return function (current)
             -- Go from previous to current
-            local arrows_out = s.pair(s.arrow(previous, current, '', ''),
+            local arrows_out = s.pair(s.arrow(previous, current, ''),
                                       s.null())
 
             -- Go from current to rule
@@ -204,7 +204,7 @@ function create_arrows.star(rule)
 
             -- Make fins go to current
             for _, v in ipairs(fins_rule) do
-               arrows_out = s.pair(s.arrow(v, current, '', ''), arrows_out)
+               arrows_out = s.pair(s.arrow(v, current, ''), arrows_out)
             end
 
             return arrows_out
@@ -223,7 +223,7 @@ function create_arrows.grammar(item)
    end
 end
 
-function create_arrows.ref(item)
+function create_arrows.ref(_)
    assert(false, "Refs should be expanded")
 end
 

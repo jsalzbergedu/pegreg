@@ -7,14 +7,11 @@ function print_fst.state(n, final)
    return string.format("(state %d %s)", n, final)
 end
 
-function print_fst.arrow(from, to, input, output)
+function print_fst.arrow(from, to, input)
    if input == '' then
       input = 'ε'
    end
-   if output == '' then
-      output = 'ε'
-   end
-   return string.format("(arrow %d %d %s %s)", from, to, input, output)
+   return string.format("(arrow %d %d %s)", from, to, input)
 end
 
 function print_fst.pair(fst, snd)
