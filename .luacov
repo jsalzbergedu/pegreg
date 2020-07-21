@@ -1,4 +1,6 @@
 exclude = {
    "test",
-   ".luarocks"
+   ".luarocks",
+   ".luaunit",
+   "fst_fast"
 }
