@@ -30,7 +30,248 @@ function TestReify:testReifyOutput()
    print()
    print("Testing the reify interpreter")
    print(tostring(TestReify.make_reified()))
-   -- TODO better tests here
+   local expected = {
+      {
+         {
+            final = false,
+            number = 0,
+         },
+         {
+            final = false,
+            number = 1,
+         },
+         {
+            final = false,
+            number = 2,
+         },
+         {
+            final = false,
+            number = 3,
+         },
+         {
+            final = false,
+            number = 4,
+         },
+         {
+            final = false,
+            number = 5,
+         },
+         {
+            final = false,
+            number = 6,
+         },
+         {
+            final = false,
+            number = 7,
+         },
+         {
+            final = false,
+            number = 8,
+         },
+         {
+            final = false,
+            number = 9,
+         },
+         {
+            final = false,
+            number = 10,
+         },
+         {
+            final = false,
+            number = 11,
+         },
+         {
+            final = false,
+            number = 12,
+         },
+         {
+            final = false,
+            number = 13,
+         },
+         {
+            final = false,
+            number = 14,
+         },
+         {
+            final = false,
+            number = 15,
+         },
+         {
+            final = false,
+            number = 16,
+         },
+         {
+            final = false,
+            number = 17,
+         },
+         {
+            final = false,
+            number = 18,
+         },
+         {
+            final = false,
+            number = 19,
+         },
+         {
+            final = false,
+            number = 20,
+         },
+         {
+            final = false,
+            number = 21,
+         },
+         {
+            final = false,
+            number = 22,
+         },
+         {
+            final = false,
+            number = 23,
+         },
+         {
+            final = true,
+            number = 24,
+         },
+      },
+      {
+         {
+            from = -1,
+            input = "",
+            to = 0,
+         },
+         {
+            from = 0,
+            input = "",
+            to = 1,
+         },
+         {
+            from = 1,
+            input = "",
+            to = 2,
+         },
+         {
+            from = 2,
+            input = "",
+            to = 3,
+         },
+         {
+            from = 2,
+            input = "",
+            to = 13,
+         },
+         {
+            from = 3,
+            input = "",
+            to = 4,
+         },
+         {
+            from = 4,
+            input = "",
+            to = 5,
+         },
+         {
+            from = 5,
+            input = "a",
+            to = 6,
+         },
+         {
+            from = 6,
+            input = "",
+            to = 7,
+         },
+         {
+            from = 7,
+            input = "",
+            to = 8,
+         },
+         {
+            from = 8,
+            input = "",
+            to = 9,
+         },
+         {
+            from = 9,
+            input = "a",
+            to = 10,
+         },
+         {
+            from = 10,
+            input = "",
+            to = 11,
+         },
+         {
+            from = 11,
+            input = "",
+            to = 12,
+         },
+         {
+            from = 12,
+            input = "",
+            to = 23,
+         },
+         {
+            from = 13,
+            input = "",
+            to = 14,
+         },
+         {
+            from = 14,
+            input = "",
+            to = 15,
+         },
+         {
+            from = 15,
+            input = "b",
+            to = 16,
+         },
+         {
+            from = 16,
+            input = "",
+            to = 17,
+         },
+         {
+            from = 17,
+            input = "",
+            to = 18,
+         },
+         {
+            from = 18,
+            input = "",
+            to = 19,
+         },
+         {
+            from = 19,
+            input = "b",
+            to = 20,
+         },
+         {
+            from = 20,
+            input = "",
+            to = 21,
+         },
+         {
+            from = 21,
+            input = "",
+            to = 22,
+         },
+         {
+            from = 22,
+            input = "",
+            to = 23,
+         },
+         {
+            from = 23,
+            input = "x",
+            to = 24,
+         },
+         {
+            from = 23,
+            input = "x",
+            to = 24,
+         },
+      },
+   }
+   luaunit.assertEquals(TestReify.make_reified(), expected)
 end
 
 function TestReify:testReifyInterpreter()

@@ -44,9 +44,7 @@ local dominators = require("pegreg.algorithms.dominators")
 --  where the NFA state is an arbitrary state in the NFA corresponding
 --  to the DFA
 --
--- TODO: After further consideration,
--- I had to revisit my definition yet again.
--- Start states dominated by A_F should not be removed.
+-- Start states (0 states) dominated by A_F should not be removed.
 -- This is because possessiveness comes from simulating an
 -- NFA where passing through A_F causes K or B to fail;
 -- however, K0 or B0 do not represent states _inside_ the K and B

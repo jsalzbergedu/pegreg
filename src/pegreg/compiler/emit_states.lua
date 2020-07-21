@@ -14,8 +14,6 @@ function emit_states.from_abstract(dfst)
       for arrow in dfst:outgoing(state) do
          local fse = ins:get_outgoing(arrow:input())
          fse:set_outstate(arrow:to():number())
-         -- TODO are we keeping output
-         -- seperate on arrows or not?
          fse:set_outchar(arrow:input())
       end
       ins:finish()
