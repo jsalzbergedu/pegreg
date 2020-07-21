@@ -18,9 +18,15 @@ before_install:
   - popd
   - luarocks install luaunit
   - luarocks install luafilesystem
+  - luarocks install Lua-cURL
+  - luarocks install luacov
+  - luarocks install luacov-coveralls
 
 install:
   - luarocks make
 
 script:
-  - luarocks test
+  - lua -lluacov test.lua -x testCompilerOutput3
+
+after_success:
+  - luacov-coveralls
