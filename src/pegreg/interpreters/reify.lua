@@ -76,6 +76,10 @@ local function nub(lst)
 end
 
 
+--- Create an NFA from states and arrows
+--- @param states any a list of states
+--- @param arrows any a list of arrows
+--- @return NFA
 function reify.create(states, arrows)
    -- First, nub and sort
    table.sort(states, function (a, b) return a.number < b.number end)
