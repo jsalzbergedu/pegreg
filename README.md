@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/jsalzbergedu/pegreg.svg?branch=master)](https://travis-ci.com/jsalzbergedu/pegreg) 
 [![License](http://img.shields.io/badge/Licence-MIT-brightgreen.svg)](LICENSE)
-[![Lua](https://img.shields.io/badge/Lua-5.2%2C%205.3-blue.svg)]()
+[![Lua](https://img.shields.io/badge/Lua-5.2%2C%205.3%2C%20MoonJIT-blue.svg)]()
 [![Coverage Status](https://coveralls.io/repos/github/jsalzbergedu/pegreg/badge.svg?branch=master)](https://coveralls.io/github/jsalzbergedu/pegreg?branch=master)
 
 # PEGREG
