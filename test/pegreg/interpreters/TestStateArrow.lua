@@ -11,7 +11,7 @@ local enumerate = pegreg.enumerate
 local state_arrow = pegreg.state_arrow
 local flatten = pegreg.flatten
 local print_n = pegreg.print_n
-local print_fst = pegreg.print_fst
+local print_nfa = pegreg.print_nfa
 
 TestStateArrow = {}
 
@@ -34,7 +34,7 @@ function TestStateArrow:testStateArrowOutput()
          :rule('B'):is(l:lit('bb'))
          :rule('K'):is(l:lit('x'))
          :grammar(l:seq(l:choice(l:ref('A'), l:ref('B')), l:ref('K')))
-         :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(print_fst)
+         :create(expand_ref)(expand_string)(add_left_right)(mark_fin)(enumerate)(state_arrow)(flatten)(print_nfa)
    end
 end
 
@@ -44,7 +44,7 @@ function TestCreateArrows:testStateArrowStar()
    do
       local l = l.l()
       local arrows = l:grammar(l:seq(l:star(l:lit("a")), l:lit("b")))
-         :create(expand_ref)(expand_string)(mark_fin)(enumerate)(state_arrow)(flatten)(print_fst)
+         :create(expand_ref)(expand_string)(mark_fin)(enumerate)(state_arrow)(flatten)(print_nfa)
    end
 end
 

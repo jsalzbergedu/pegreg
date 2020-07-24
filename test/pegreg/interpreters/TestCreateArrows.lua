@@ -6,7 +6,7 @@ local mark_fin = pegreg.mark_fin
 local enumerate = pegreg.enumerate
 local create_arrows = pegreg.create_arrows
 local flatten = pegreg.flatten
-local print_fst = pegreg.print_fst
+local print_nfa = pegreg.print_nfa
 
 TestCreateArrows = {}
 
@@ -22,7 +22,7 @@ function TestCreateArrows:testCreateArrows()
          :rule('B'):is(l:lit('bb'))
          :rule('K'):is(l:lit('x'))
          :grammar(l:seq(l:choice(l:ref('A'), l:ref('B')), l:ref('K')))
-         :create(expand_ref)(expand_string)(mark_fin)(enumerate)(create_arrows)(flatten)(print_fst)
+         :create(expand_ref)(expand_string)(mark_fin)(enumerate)(create_arrows)(flatten)(print_nfa)
    end
 end
 
@@ -32,7 +32,7 @@ function TestCreateArrows:testCreateArrowsStar()
    do
       local l = l.l()
       local arrows = l:grammar(l:seq(l:star(l:lit("a")), l:lit("b")))
-         :create(expand_ref)(expand_string)(mark_fin)(enumerate)(create_arrows)(flatten)(print_fst)
+         :create(expand_ref)(expand_string)(mark_fin)(enumerate)(create_arrows)(flatten)(print_nfa)
    end
 end
 

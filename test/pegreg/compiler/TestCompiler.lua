@@ -70,3 +70,12 @@ function TestCompiler:testStarNotPossesive()
    luaunit.assertTrue(match_success)
    luaunit.assertEquals(matched_states, {1, 1})
 end
+
+function TestCompiler:testSingularChar()
+   local l = compiler.l()
+   local it = l:grammar(l:lit('a')):create()
+   local outstr, match_success, matched_states = it:match_string('a')
+   luaunit.assertEquals(outstr, 'a')
+   luaunit.assertTrue(match_success)
+   luaunit.assertEquals(matched_states, {1})
+end

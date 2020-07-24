@@ -7,7 +7,6 @@
 A lua library for compiling a subset of PEGs to FSTs.
 Requires fst-fast-system (an NFST interpreter) and fst-fast (a lua library wrapping fst-fast-system).
 
-
 # Roadmap
 For arbitrary regular expressions or string literals A and B, this library
 turns A/B, AB, and A* into DFAs quite well.

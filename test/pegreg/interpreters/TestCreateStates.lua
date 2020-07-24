@@ -8,7 +8,7 @@ local mark_fin = pegreg.mark_fin
 local enumerate = pegreg.enumerate
 local create_states = pegreg.create_states
 local flatten = pegreg.flatten
-local print_fst = pegreg.print_fst
+local print_nfa = pegreg.print_nfa
 
 TestCreateStates = {}
 
@@ -25,7 +25,7 @@ function TestCreateStates:testCreateStateOutput()
          :rule('B'):is(l:lit('bb'))
          :rule('K'):is(l:lit('x'))
          :grammar(l:seq(l:choice(l:ref('A'), l:ref('B')), l:ref('A')))
-         :create(expand_ref)(expand_string)(mark_fin)(enumerate)(create_states)(flatten)(print_fst)
+         :create(expand_ref)(expand_string)(mark_fin)(enumerate)(create_states)(flatten)(print_nfa)
    end
 end
 

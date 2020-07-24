@@ -2,7 +2,7 @@ local pegreg = require("pegreg")
 local luaunit = require("luaunit")
 
 local fstl = pegreg.fst_language
-local print_fst = pegreg.print_fst
+local print_nfa = pegreg.print_nfa
 
 TestPrintFst = {}
 
@@ -15,7 +15,7 @@ function TestPrintFst:testPrintFstOutput()
          :state(2, true)
          :arrow(0, 1, 'a', 'a')
          :arrow(1, 2, 'b', 'b')
-         :create(print_fst)
+         :create(print_nfa)
    end
 end
 
@@ -31,5 +31,5 @@ function TestPrintFst:assertSLInterpreter(interpreter)
 end
 
 function TestPrintFst:testPrintFstInterpreter()
-   TestPrintFst:assertSLInterpreter(print_fst)
+   TestPrintFst:assertSLInterpreter(print_nfa)
 end
