@@ -129,8 +129,24 @@ function TestReify:testReifyOutput()
             number = 23,
          },
          {
-            final = true,
+            final = false,
             number = 24,
+         },
+         {
+            final = false,
+            number = 25,
+         },
+         {
+            final = false,
+            number = 26,
+         },
+         {
+            final = false,
+            number = 27,
+         },
+         {
+            final = true,
+            number = 28,
          },
       },
       {
@@ -261,13 +277,53 @@ function TestReify:testReifyOutput()
          },
          {
             from = 23,
-            input = "x",
+            input = "",
             to = 24,
          },
          {
             from = 23,
-            input = "x",
+            input = "",
             to = 24,
+         },
+         {
+            from = 24,
+            input = "",
+            to = 25,
+         },
+         {
+            from = 24,
+            input = "",
+            to = 25,
+         },
+         {
+            from = 25,
+            input = "x",
+            to = 26,
+         },
+         {
+            from = 25,
+            input = "x",
+            to = 26,
+         },
+         {
+            from = 26,
+            input = "",
+            to = 27,
+         },
+         {
+            from = 26,
+            input = "",
+            to = 27,
+         },
+         {
+            from = 27,
+            input = "",
+            to = 28,
+         },
+         {
+            from = 27,
+            input = "",
+            to = 28,
          },
       },
    }

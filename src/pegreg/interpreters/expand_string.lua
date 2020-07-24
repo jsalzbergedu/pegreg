@@ -32,9 +32,6 @@ function expand_string.lit(lit)
       if lit == "" then
          return interpreter.e()
       end
-      if #lit == 1 then
-         return interpreter.lit(lit)
-      end
       local acc = interpreter.e()
       return expand_string_rec(interpreter,
                                lit:sub(1, #lit - 1),
