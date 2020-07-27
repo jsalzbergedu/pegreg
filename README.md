@@ -42,3 +42,8 @@ to do this, we need
 
 - [ ] A backend that can accept `push`, `snoc`, and `sel`, instead of DFSTs operating from chars to char
 - [ ] A frontend that emits those instructions instead of DFSTs from char to char
+
+# Interpreter Style
+Each interpreter in PEGREG's interpreter chain forms a [tagless final interpreter](https://www.cs.utexas.edu/~wcook/Drafts/2012/ecoop2012.pdf).
+
+And the FST uses a version of [finite state transducers](https://www.cs.jhu.edu/~jason/405/lectures1-2/sld001.htm).
