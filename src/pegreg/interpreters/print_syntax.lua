@@ -34,7 +34,7 @@ function print_syntax.ref(rule, rules)
 end
 
 function print_syntax.star(item)
-   local out = string.format("(star %s)", rule)
+   local out = string.format("(star %s)", item)
    return out
 end
 
