@@ -79,3 +79,12 @@ function TestCompiler:testSingularChar()
    luaunit.assertTrue(match_success)
    luaunit.assertEquals(matched_states, {1})
 end
+
+function TestCompiler:testAStar()
+   local l = compiler.l()
+   local it = l:grammar(l:star(l:lit('a'))):create()
+   local outstr, match_success, matched_states = it:match_string('aa')
+   luaunit.assertEquals(outstr, 'aa')
+   luaunit.assertTrue(match_success)
+   luaunit.assertEquals(matched_states, {1, 1})
+end
