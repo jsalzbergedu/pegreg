@@ -1,0 +1,40 @@
+digraph {
+  rankdir = "LR"
+  zero [shape = none, label = <
+        <table border="1" cellborder="1" cellspacing="3">
+        <tr>
+        <td bgcolor="red"><font color="black">q0</font></td>
+        <td bgcolor="red"><font color="black">A0</font></td>
+        <td bgcolor="red"><font color="black">B0</font></td>
+        </tr>
+        </table>>];
+  one [shape = none, label = <
+         <table border="1" cellborder="1" cellspacing="3">
+         <tr>
+         <td bgcolor="orange"><font color="black">AF</font></td>
+         <td bgcolor="orange:yellow"><font color="black">K0</font></td>
+         <td bgcolor="yellow"><font color="black">B1</font></td>
+         </tr>
+         </table>>];
+  two [shape = none, label = <
+       <table border="1" cellborder="1" cellspacing="3">
+       <tr>
+       <td bgcolor="yellow"><font color="black">BF</font></td>
+       <td bgcolor="orange:yellow"><font color="black">K0</font></td>
+       </tr>
+       </table>>];
+  k_fin [shape = none, label = <
+         <table border="1" cellborder="1" cellspacing="3">
+         <tr>
+         <td bgcolor="green"><font color="black">KF</font></td>
+         </tr>
+         </table>>];
+  zero -> one [ label = "a", fillcolor = "orange:yellow", color = "orange:yellow" ]
+  one -> two [ label = "a", fillcolor = "yellow", color = "yellow" ]
+  one -> k_fin [ label = "b", fillcolor = green, color = green ]
+  two -> k_fin [ label = "b", fillcolor = green, color = green ]
+
+  one:sw -> zero:se [ fillcolor = "indigo", color = "indigo" ]
+  two:sw -> one:se [ fillcolor = "indigo", color = "indigo" ]
+  k_fin:sw -> one:se [ fillcolor = "indigo", color = "indigo" ]
+}

@@ -2,5 +2,6 @@
 /lua
 /lua_modules
 /.luarocks
-/visualizations/*
 luacov.*
+*.png
+*.old

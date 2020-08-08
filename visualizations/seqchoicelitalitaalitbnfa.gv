@@ -1,0 +1,59 @@
+digraph {
+  rankdir = "LR"
+  q_zero [shape = none, label = <
+          <table border="0" cellborder="1" cellspacing="3">
+          <tr>
+          <td bgcolor="red"><font color="black">q0</font></td>
+          </tr>
+          </table>>];
+  a_zero [shape = none, label = <
+          <table border="0" cellborder="1" cellspacing="3">
+          <tr>
+          <td bgcolor="red"><font color="black">A0</font></td>
+          </tr>
+          </table>>];
+  a_fin [shape = none, label = <
+         <table border="0" cellborder="1" cellspacing="3">
+         <tr>
+         <td bgcolor="orange"><font color="black">AF</font></td>
+         </tr>
+         </table>>];
+  b_zero [shape = none, label = <
+          <table border="0" cellborder="1" cellspacing="3">
+          <tr>
+          <td bgcolor="red"><font color="black">B0</font></td>
+          </tr>
+          </table>>];
+  b_one [shape = none, label = <
+         <table border="0" cellborder="1" cellspacing="3">
+         <tr>
+         <td bgcolor="yellow"><font color="black">B1</font></td>
+         </tr>
+         </table>>];
+  b_fin [shape = none, label = <
+         <table border="0" cellborder="1" cellspacing="3">
+         <tr>
+         <td bgcolor="yellow"><font color="black">BF</font></td>
+         </tr>
+         </table>>];
+  k_zero [shape = none, label = <
+          <table border="0" cellborder="1" cellspacing="3">
+          <tr>
+          <td bgcolor="orange:yellow"><font color="black">K0</font></td>
+          </tr>
+          </table>>];
+  k_fin [shape = none, label = <
+         <table border="0" cellborder="1" cellspacing="3">
+         <tr>
+         <td bgcolor="green"><font color="black">KF</font></td>
+         </tr>
+         </table>>];
+  q_zero -> a_zero [ label = <&epsilon;>, fillcolor = red, color = red ]
+  a_zero -> a_fin [ label = "a", fillcolor = orange, color = orange ]
+  a_fin -> k_zero [ label = <&epsilon;> fillcolor = "orange:yellow", color = "orange:yellow" ]
+  k_zero -> k_fin [ label = "b", fillcolor = green, color = green ]
+  q_zero -> b_zero [ label = <&epsilon;>, fillcolor = red, color = red ]
+  b_zero -> b_one [ label = "a", fillcolor = "yellow", color = "yellow" ]
+  b_one -> b_fin [ label = "a", fillcolor = "yellow", color = "yellow"]
+  b_fin -> k_zero [ label = <&epsilon;>, fillcolor = "orange:yellow", color = "orange:yellow" ]
+}
