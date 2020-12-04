@@ -3,7 +3,7 @@
 [![Lua](https://img.shields.io/badge/Lua-5.2%2C%205.3%2C%20MoonJIT-blue.svg)]()
 [![Coverage Status](https://coveralls.io/repos/github/jsalzbergedu/pegreg/badge.svg?branch=master)](https://coveralls.io/github/jsalzbergedu/pegreg?branch=master)
 
-[Poster Explaining PEGREG](pegregposter.png)
+![Poster Explaining What PEGREG is](https://user-images.githubusercontent.com/25715167/101115874-12c0ad00-35b2-11eb-943d-601b77c32d2e.png)
 
 # PEGREG
 A lua library for compiling a subset of PEGs to FSTs.
