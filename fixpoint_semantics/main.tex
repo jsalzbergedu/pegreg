@@ -107,7 +107,7 @@ $
     R_p \llbracket \langle e_1/e_2, e_3 \rangle \rrbracket = \{ s_1s_3, s_2s_3 \mid s_1 \in R_p \llbracket \langle e_1, \epsilon \rangle \rrbracket, s_3 \in R_p \llbracket \langle e_3, \epsilon \rangle \rrbracket, s_2 \in R_p \llbracket \langle e_2, \epsilon \rangle \rrbracket \setminus R_p \llbracket \langle e_1, \epsilon \rangle \rrbracket \} & \mbox{ordered choice} \\
     F_p \llbracket \langle e_1\ast, \epsilon \rangle \rrbracket(X) = \{s_1 \mid s_1 \in R_p \llbracket \langle e_1, \epsilon \rangle \rrbracket \} \cup \{s_1s_2 \mid s_1 \in X \land s_2 \in X \} & \mbox{greedy repitition} \\
     R_p \llbracket \langle e_1\ast, \epsilon\rangle \rrbracket = \lfp F_p & \ast \epsilon\mbox{-case} \\
-    R_p \llbracket \langle e_1\ast, e_2 \rangle \rrbracket = \{s_1s_2 \mid s_1 \in R_p \llbracket \langle e_1\ast, \epsilon \rangle \rrbracket, s_2 \in R_p \llbracket e_2 \rrbracket \setminus R_p \llbracket e_1 \rrbracket \} & \ast \mbox{general case} \\
+    R_p \llbracket \langle e_1\ast, e_2 \rangle \rrbracket = \{s_1s_2 \mid s_1 \in R_p \llbracket \langle e_1\ast, \epsilon \rangle \rrbracket, s_2 \in R_p \llbracket \langle e_2, \epsilon \rangle \rrbracket \setminus R_p \llbracket \langle e_1, \epsilon \rangle \rrbracket \} & \ast \mbox{general case} \\
   \end{array}
 $
 \end{center}
