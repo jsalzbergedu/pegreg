@@ -114,4 +114,61 @@ $
 
 The set minus operation can then be encoded in a finite state machine: $L_1 \setminus L_2 = L_1 \cap \neg(L_2) = \neg(L_1 \cup \neg(L_2))$.
 
+Update Sept. 22:
+
+Perhaps something along the lines of the following could work:
+
+From right to left, make the expression into an automaton, starting with the leftmost character. Explore
+the automaton $m$, from the start state q0 to all of the characters that can be reached from the PEG expression.
+
+Because the automaton is finite, this will always terminate. From each complete run of the PEG expression on
+the automaton, collect a ``frontier'' of reached nodes. From this frontier, find all paths that follow; the
+automaton form the start state, thorugh the explored paths, then through the paths that follow, to
+give us a new automaton $m\prime$. Compute the automaton $L(m) \ L(m\prime)$.
+
+Recurse on the remainder of the PEG expression. Concatenate the result of this recursion to your final automaton.
+\begin{verbatim}
+https://docs.google.com/document/d/1azsh8RWpNUap893emGzVguanOr-4rW51Z0gx3ZkY15o/edit?usp=sharing
+\end{verbatim}
+
+\begin{verbatim}
+Algorithm:
+
+PEGREG(PEG) -- outputs a FSM from a PEG
+PEGREG_RECURSIVE(PEG, frontier, paths, automaton) -- Outputs an FSM from a PEG, recursing.
+
+PEGREG(ε) = empty language automaton
+PEGREG(c) = the automaton matching {“c”}
+PEGREG(x/y) =
+  let y_automaton = PEGREG_RECURSIVE(y) in
+    PEGREG(x)|PEGREG_RECURSIVE(x, {q0}, {q0}, y_automaton)
+PEGREG(x*) =
+  PEGREG_RECURSIVE(x, {q0}, {q0}, empty language automaton)
+PEGREG(x.y) where y is the rightmost concatenated element =
+  let y_automaton = PEGREG_RECURSIVE(y) in
+    PEGREG(x).PEGREG_RECURSIVE(x, {q0}, {q0}, y_automaton)
+
+PEGREG_RECURSIVE(ε, frontier, p, a) = 
+  from frontier explore all paths in a
+  Concatenate these paths to p, resulting in an automaton aprefix
+  Compute the automaton for the language L(a) \ L(aprefix), aout
+  return aout
+PEGREG_RECURSIVE(c, frontier, p, a) = 
+  for every transition (s0, c, s1) in a, add s1 to the frontier, and,
+  if there is no transition (s0, c, s0) in a, where s0 is the one mentioned
+  above, remove s0 from the frontier
+  return PEGREG_RECURSIVE(ε, frontier, p, a)
+PEGREG_RECURSIVE(x*, frontier, p, a)
+  let a0 = PEGREG_RECURSIVE(x, frontier, p, a)
+  until you reach a fixedpoint, an, compute
+    ai + 1 = PEGREG_RECURSIVE(x, {q0}, {q0}, ai)
+  return an
+PEGREG_RECURSIVE(l/r, frontier, p, a)
+  compute al = PEGREG_RECURSIVE(l, frontier, p, a)
+  PEGREG_RECURSIVE(r, {q0}, {q0}, al)
+PEGREG_RECURSIVE(x.y, frontier, p, a) where y is the rightmost concatenated expr. = 
+  a1 = PEGREG_RECURSIVE(x, frontier, p, a)
+  PEGREG_RECURSIVE(y, {q0}, {q0}, a1)
+\end{verbatim}
+
 \end{document}
