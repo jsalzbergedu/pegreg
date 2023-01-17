@@ -2440,12 +2440,39 @@ Section PegReg.
     }
   Qed.
 
+  Definition splits_imply_concat_inclusion : forall {T}, forall (P : list T -> Prop), forall l, (forall l1 l2 : list T, l1 ++ l2 = l -> P l1) -> (l = [] \/ forall l3, concat l3 = l -> exists l1', In l1' l3 /\ P l1').
+    intros T P l H.
+    destruct l eqn:eql.
+    {
+      left.
+      reflexivity.
+    }
+    {
+      right.
+      intros l3.
+      rewrite <- eql in * |- *.
+      intros HConc.
+      destruct l3.
+      {
+        simpl in HConc.
+        subst.
+        discriminate.
+      }
+      {
+        simpl in HConc.
+        assert (P l1) by eauto.
+        exists l1. split; eauto. left. reflexivity.
+      }
+    }
+  Qed.
+
   Definition some_implies_match (P : PEG) (r__cont : REG) (r__out : REG) (l1 l2 l3 : list Σ):=
     PegMatch P l1 (Some (l2, l3)) -> RegMatch r__cont l3 true ->
     RegMatch r__out l1 true.
 
+    (* None implies doesn't match any of the PREFIXES. *)
   Definition none_implies_nomatch (P : PEG) (r__cont : REG) (r__out : REG) (l1 l2 l3 : list Σ):=
-    PegMatch P l1 None -> RegMatch r__out l1 false.
+    PegMatch P l1 None -> forall l2 l3, l2 ++ l3 = l1 -> RegMatch r__out l2 false.
 
   Definition blame_cont (P : PEG) (r__cont : REG) (r__out : REG) (l1 l2 l3 : list Σ) :=
     PegMatch P l1 (Some (l2, l3)) -> RegMatch r__cont l3 false -> RegMatch r__out l1 false.
@@ -2512,8 +2539,25 @@ Section PegReg.
   (*     subst. *)
   (*   } *)
 
-  Context  (RStarConcatWeak : forall r1 r2 l b, RegMatch (RConcat r1 (RConcat (RStar r1) r2)) l b ->
-                                       RegMatch (RConcat (RStar r1) r2) l b).
+  Lemma NoPegEmp : forall p l o, PegMatch p l o -> l <> [].
+    intros p l o m.
+    induction m; try discriminate; try assumption.
+  Qed.
+
+  (* Lemma NoStarBySubterm : forall p l o, PegMatch p l o -> o = None -> *)
+  (*                                  forall l1 c o', l = c :: l1 -> ~(PegMatch (PossesiveStar p) l o'). *)
+  (*   intros p l o m. *)
+  (*   induction m; try discriminate. *)
+  (*   { *)
+  (*     intros H0 l1 c o' H1 H2. *)
+  (*     inversion H1. *)
+  (*     apply eq_dec_correct in H. *)
+  (*     subst c. *)
+  (*     inversion H2. *)
+  (*     { *)
+  (*       subst. *)
+  (*     } *)
+  (*   } *)
 
   Lemma SomeImpliesMatchStarStrong :
     forall p l o, PegMatch p l o ->
@@ -2528,32 +2572,16 @@ Section PegReg.
       inversion Heq2.
       inversion Heq1.
       subst.
+      destruct l3. { eapply NoPegEmp in m. contradiction. }
       simpl.
-      replace l3 with ([] ++ l3) by eauto.
-      constructor; try eauto using RegMatch.
-      {
-        constructor.
-        exists []; split; eauto.
-      }
+      replace (s :: l3) with ([] ++ (s :: l3)) by eauto.
+      constructor. { constructor. exists []; split; eauto. }
       unfold RSetMinus.
       constructor; try assumption.
       constructor.
-      apply RIntersectionFL.
-      eapply LR_Implies_NoneNoMatch with (r__out := (PEGREG p' REmp)) in m as HNomatch.
-      {
-        
-      }
-      replace l3 with ([] ++ l3) by eauto.
+      eapply RIntersectionFL.
       constructor.
-      {
-        assert (LR p' REmp (PEGREG p' REmp) l3 [] []) by eauto.
-        apply LR_Implies_NoneNoMatch in H.
-        unfold none_implies_nomatch in H.
-        eauto.
-      }
-      {
-        constructor.
-      }
+      intros l' H'.
     }
     {
       intros p' Heq1 HLR l5 l6 Heq2 r HMatch.
