@@ -5,6 +5,8 @@ From mathcomp Require Import fintype.
 Require Import Basics.
 Require Import Lia.
 
+Axiom lem : forall P : Prop, P \/ ~P.
+
 
 Section PegReg.
   Context (Σ : finType).
@@ -1150,9 +1152,13 @@ Section PegReg.
     Qed.
 
 
+    Theorem PegPartial : forall p l o, PegMatch p l o -> forall o', PegMatch p l o' -> o = o'.
+      intros p.
+      assert (PPartial p) by eauto using PegPartialFunctionStrong.
+      eauto using PegPartialFunctionStrong.
+    Qed.
+
     Definition StrengthenFail (P : PEG) (l1 l2 : list Σ) :=  DoesNotMatch P (l1 ++ l2) -> DoesNotMatch P l1.
-    Definition StrengthenMatch (P : PEG) (l1 l2 l3 l4: list Σ) :=  (forall p, P <> (PossesiveStar p)) ->
-                                                                   PegMatch P (l1 ++ l4) (Some (l2, l3 ++ l4)) -> PegMatch P l1 (Some (l2, l3)).
 
     Lemma splitcases : forall T, forall (l1 l2 l3 l4 : list T), l1 ++ l2 = l3 ++ l4 ->
                                                       ((exists restl3, (l1 ++ restl3) = l3 /\ restl3 ++ l4 = l2) \/ (exists begl4, l3 ++ begl4 = l1 /\ begl4 ++ l2 = l4)).
@@ -1215,178 +1221,35 @@ Section PegReg.
       }
     Qed.
 
-    (* Lemma MatchStrengthen : forall P l1 l2, StrengthenFail P l1 l2. *)
-    (*   intros p. *)
-    (*   induction p. *)
-    (*   { *)
-    (*     intros l1 l2. *)
-    (*     { *)
-    (*       unfold StrengthenFail. *)
-    (*       intros H. *)
-    (*       unfold DoesNotMatch in H. *)
-    (*       inversion H. *)
-    (*       { *)
-    (*         unfold DoesNotMatch. *)
-    (*         destruct l1. *)
-    (*         { *)
-    (*           left. intros l1 l0 H'. inversion H'. *)
-    (*         } *)
-    (*         { *)
-    (*           left. *)
-    (*           intros l1' l2' H'. *)
-    (*           inversion H'. *)
-    (*           subst. *)
-    (*           assert (WeakenMatch (Char s) [s] l2' l2). { apply MatchWeaken. } *)
-    (*           eauto. *)
-    (*         } *)
-    (*       } *)
-    (*       { *)
-    (*         unfold DoesNotMatch. *)
-    (*         destruct l1. *)
-    (*         { *)
-    (*           left. intros l1' l2' H'. inversion H'. *)
-    (*         } *)
-    (*         { *)
-    (*           inversion H0. *)
-    (*           subst. *)
-    (*           right. *)
-    (*           now constructor. *)
-    (*         } *)
-    (*       } *)
-    (*     } *)
-    (*   } *)
-    (*   { *)
-    (*     intros l1 l2 H. *)
-    (*     unfold DoesNotMatch. *)
-    (*     unfold DoesNotMatch in H. *)
-    (*     inversion H. *)
-    (*     { *)
-    (*       left. *)
-    (*       intros l1' l2' H'. *)
-    (*       inversion H'. *)
-    (*       subst. *)
-    (*       eapply list_split in H' as HLS. *)
-    (*       subst l1. *)
-    (*       repeat (rewrite <- app_assoc in H'). *)
-    (*       repeat (rewrite <- app_assoc in H0). *)
-    (*       assert (WeakenMatch (Concat p1 p2) (l3 ++ l5) l2' l2). { eapply MatchWeaken. } *)
-    (*       unfold WeakenMatch in H1. repeat (rewrite <- app_assoc in H1). *)
-    (*       eauto. *)
-    (*     } *)
-    (*     { *)
-    (*       inversion H0. *)
-    (*       { *)
-    (*         subst. *)
-    (*         assert (StrengthenFail p1 l1 l2) by eauto. *)
-    (*         unfold StrengthenFail in H1. *)
-    (*         assert (DoesNotMatch p1 l1). { eapply H1. unfold DoesNotMatch. now right. } *)
-    (*         unfold DoesNotMatch in H2. *)
-    (*         inversion H2. *)
-    (*         { *)
-    (*           left. intros l0 l3 H'. *)
-    (*           inversion H'. *)
-    (*           subst. *)
-    (*           eauto. *)
-    (*         } *)
-    (*         { *)
-    (*           right. now constructor. *)
-    (*         } *)
-    (*       } *)
-    (*       { *)
-    (*         subst. *)
-    (*         inversion H. *)
-    (*         { *)
-    (*           left. *)
-    (*           intros l1' l2' H'. *)
-    (*           inversion H'. *)
-    (*           subst. *)
-    (*           eapply list_split in H8 as HLS1. rewrite HLS1 in H8. *)
-    (*           assert (WeakenMatch p1 l5 l6 l2). { eapply MatchWeaken. } *)
-    (*           unfold WeakenMatch in H2. *)
-    (*           assert (PegMatch p1 (l5 ++ l6 ++ l2) (Some (l5, l6 ++ l2))) by eauto. *)
-    (*           eapply list_split in H10 as HLS2. rewrite HLS2 in H10. *)
-    (*           assert (WeakenMatch p2 l7 l2' l2). { eapply MatchWeaken. } *)
-    (*           unfold WeakenMatch in H6. assert (PegMatch p2 (l7 ++ l2' ++ l2) (Some (l7, l2' ++ l2))) by eauto. *)
-    (*           subst. *)
-    (*           repeat rewrite <- app_assoc in * |- *. *)
-    (*           eauto using PegMatch. *)
-    (*         } *)
-    (*         { *)
-    (*           eapply list_split in H3 as HLS. *)
-    (*           eapply splitcases in HLS as HSC. *)
-    (*           inversion HSC. *)
-    (*           { *)
-    (*             inversion H2. *)
-    (*             inversion H4. *)
-    (*             subst. *)
-                
-    (*           } *)
-    (*           inversion H1. *)
-    (*           { *)
-    (*             subst. *)
-    (*             assert (StrengthenFail p1 l1 l2) by eauto. *)
-    (*             hnf in H2. *)
-    (*             assert (DoesNotMatch p1 l1). { eapply H2. hnf. now right. } *)
-    (*             hnf in H4. *)
-    (*             inversion H4. *)
-    (*             { *)
-    (*               left. *)
-    (*               intros l1' l2' H'. *)
-    (*               inversion H'. subst. eauto. *)
-    (*             } *)
-    (*             { *)
-    (*               right. now constructor. *)
-    (*             } *)
-    (*           } *)
-    (*           { *)
-    (*             subst. *)
-    (*             assert (StrengthenFail p2 ) *)
-    (*           } *)
-    (*         (* inversion HSC. *) *)
-    (*         (* { *) *)
-    (*         (*   inversion H1. *) *)
-    (*         (*   inversion H2. *) *)
-    (*         (*   subst. *) *)
-    (*         (*   clear H1. *) *)
-    (*         (*   clear HSC. *) *)
-    (*         (*   clear HLS. *) *)
-    (*         (*   inversion H. *) *)
-    (*         (*   { *) *)
-    (*         (*     clear H. *) *)
-    (*         (*     left. *) *)
-    (*         (*     intros l2' l3' H'. *) *)
-    (*         (*     inversion H'. *) *)
-    (*         (*     subst. *) *)
-                
-    (*         (*   } *) *)
-    (*         (* } *) *)
-    (*       } *)
-    (*     } *)
-    (*   } *)
-
-    Lemma MatchStrengthenFail : forall P l1 l2, WeakenFail' P l1 l2.
-      intros p.
-      induction p.
+    Theorem MatchStrengthen : forall P l1 l2, StrengthenFail P l1 l2.
+      intros p l1 l2.
+      hnf. intros H'.
+      hnf. hnf in H'.
+      assert (forall o, PegMatch p l1 o \/ ~ (PegMatch p l1 o)).
       {
-        intros l1 l2 H.
-        unfold DoesNotMatch in H.
-        inversion H.
-        {
-          unfold DoesNotMatch.
-          destruct (l1 ++ l2) eqn:eqconc.
-          {
-            left.
-            intros l0 l3 H'.
-            inversion H'.
-          }
-          {
-            destruct l1.
-            {
-              simpl in eqconc. destruct l2. { inversion eqconc. } { }
-            }
-          }
-        }
+        intros o.
+        eapply lem.
       }
+      assert (PegMatch p l1 None \/ ~ PegMatch p l1 None) by eauto.
+      inversion H0.
+      {
+        now right.
+      }
+      {
+        left.
+        intros l1' l2' H''.
+        eapply list_split in H'' as HLS1.
+        assert (PegMatch p (l1' ++ l2') (Some (l1', l2'))) by (rewrite <- HLS1; assumption).
+        assert (WeakenMatch p l1' l2' l2). { eapply MatchWeaken. }
+        hnf in H3.
+        rewrite app_assoc in H3.
+        repeat rewrite <- HLS1 in H3.
+        assert (PegMatch p (l1 ++ l2) (Some (l1', l2' ++ l2))) by eauto.
+        inversion H'; try eauto.
+        assert (Some (l1', l2' ++ l2) = None) by eauto using PegPartial.
+        discriminate.
+      }
+    Qed.
 
   Lemma allmatch_eq : forall p : PEG, forall l1 l2 : list Σ, PegMatch p l1 (Some (l2, [])) -> l1 = l2.
     - intros p l1 l2 m.
@@ -1733,48 +1596,6 @@ Section PegReg.
     destruct l. auto.
     contradict H; simpl.
     apply sym_not_eq; apply O_S.
-  Qed.
-
-  Lemma nat_strong_ind: forall (P: nat -> Prop),
-      P 0 -> (forall n: nat, (forall (m: nat), m <= n -> P m) -> P (S n)) -> forall n, P n.
-  Proof.
-    intros P B IHs n.
-    destruct n.
-    exact B.
-    apply IHs.
-    induction n.
-    intros m H; replace m with 0; try lia; exact B.
-    intros m H.
-    assert (m <= n \/ m = S n) as J; try lia.
-    destruct J as [J|J].
-    apply IHn; lia.
-    rewrite J.
-    apply IHs.
-    apply IHn.
-  Qed.
-
-  Lemma length_strong_ind: forall (A:Type) (P:list A -> Prop),
-      P nil -> (forall (n: nat) (k:list A), (forall (l:list A), length l <= n -> P l) -> length k = S n -> P k) -> forall l, P l.
-  Proof.
-    intros A P B IH.
-    assert (forall (n: nat) (l:list A), length l <= n -> P l) as G.
-    intro n.
-    induction n as [| n IHS] using nat_strong_ind.
-    intros l H.
-    assert (length l = 0) as G; try lia.
-    apply length_nil in G.
-    rewrite G; exact B.
-    intro l.
-    intro H.
-    assert (length l <= n \/ length l = S n) as G; try lia.
-    destruct G as [G|G].
-    apply IHS with (m:=n); auto.
-    apply IH with (n:=n); try exact G.
-    intro k.
-    apply IHS with (m:=n) (l:=k).
-    auto.
-    intro l.
-    apply G with (n:=length l); auto.
   Qed.
 
   Lemma LOrder : forall {T}, forall l1 l2 l3 : list T, l1 ++ l2 = l3 -> length l1 <= length l3.
@@ -2236,14 +2057,6 @@ Section PegReg.
         inversion Hconcat.
         exists [a0].
         split. { left. reflexivity. } { now constructor. }
-        (* inversion Hconcat. *)
-        (* destruct t. *)
-        (* { *)
-        (*   exists  *)
-        (* } *)
-        (* assert (exists e : list Σ, In e l' /\ RegMatch (RChar c) e false). { eapply IHl'. { exact HMatch. } { exact Heq. } { }} *)
-        (* subst. *)
-        (* assert (exists e : list Σ, In e l' /\ RegMatch (RChar c) e false). { eapply IHl'. } *)
       }
     }
   Qed.
@@ -2611,8 +2424,7 @@ Section PegReg.
   (*     } *)
   (*   } *)
 
-  Check RTotal.
-  Context (tot : forall r, RTotal r).
+  (* Context (tot : forall r, RTotal r). *)
 
   Definition RSetMinus (r1 : REG) (r2 : REG) := RIntersection r1 (RNeg r2).
 
@@ -2836,112 +2648,203 @@ Section PegReg.
     }
   Qed.
 
-  Definition some_implies_match (P : PEG) (r__cont : REG) (r__out : REG) (l1 l2 l3 : list Σ):=
-    PegMatch P l1 (Some (l2, l3)) -> RegMatch r__cont l3 true ->
-    RegMatch r__out l1 true.
+  Definition some_implies_match (P : PEG) (r__cont : REG) (r__out : REG) :=
+    forall l1 l2 l3, PegMatch P l1 (Some (l2, l3)) -> RegMatch r__cont l3 true -> RegMatch r__out l1 true.
 
   (* None implies doesn't match any of the PREFIXES. *)
-  Definition none_implies_nomatch (P : PEG) (r__cont : REG) (r__out : REG) (l1 l2 l3 : list Σ):=
-    PegMatch P l1 None -> forall l2 l3, l2 ++ l3 = l1 -> RegMatch r__out l2 false.
+  Definition none_implies_nomatch (P : PEG) (r__cont : REG) (r__out : REG) :=
+    forall l1, DoesNotMatch P l1 -> RegMatch r__out l1 false.
 
-  Definition blame_cont (P : PEG) (r__cont : REG) (r__out : REG) (l1 l2 l3 : list Σ) :=
-    PegMatch P l1 (Some (l2, l3)) -> RegMatch r__cont l3 false -> RegMatch r__out l1 false.
+  Definition blame_cont (P : PEG) (r__cont : REG) (r__out : REG) :=
+    forall l1 l2 l3, PegMatch P l1 (Some (l2, l3)) -> RegMatch r__cont l3 false -> RegMatch r__out l1 false.
 
-  Definition LR (P : PEG) (r__cont : REG) (r__out : REG) (l1 l2 l3 : list Σ): Prop :=
-    some_implies_match P r__cont r__out l1 l2 l3 /\
-      none_implies_nomatch P r__cont r__out l1 l2 l3 /\
-      blame_cont P r__cont r__out l1 l2 l3.
-
-  (* Fixpoint LR (P : PEG) (r__cont : REG) (r__out : REG) : Prop := *)
-  (*   some_implies_match P r__cont r__out /\ none_implies_nomatch P r__cont r__out /\ blame_cont P r__cont r__out /\ *)
-  (*     ( *)
-  (*     match P with *)
-  (*     | Char c => True *)
-  (*     | Concat p1 p2 => True (* implied, unnec (forall r__cont2 r__out2, LR p2 r__cont2 r__out2 -> LR p1 r__out2 r__out) *) *)
-  (*     | PossesiveStar p1 => True *)
-  (*     | OrderedChoice p1 p2 => True *)
-  (*     end *)
-  (*     ). *)
-
-  Lemma LR_Implies_Match : forall P r__cont r__out l1 l2 l3, LR P r__cont r__out l1 l2 l3
-                                                    -> some_implies_match P r__cont r__out l1 l2 l3.
-    intros P r__cont r__out l1 l2 l3 H.
-    destruct P; unfold LR in H; apply H.
-  Qed.
-
-  Lemma LR_Implies_NoneNoMatch : forall P r__cont r__out l1 l2 l3, LR P r__cont r__out l1 l2 l3 -> none_implies_nomatch P r__cont r__out l1 l2 l3.
-    intros P r__cont r__out l1 l2 l3 H.
-    destruct P; unfold LR in H; apply H.
-  Qed.
-
-  Lemma LR_Implies_BlameCont : forall P r__cont r__out l1 l2 l3, LR P r__cont r__out l1 l2 l3 -> blame_cont P r__cont r__out l1 l2 l3.
-    intros P r__cont r__out l1 l2 l3 H.
-    destruct P; unfold LR in H; apply H.
-  Qed.
-
-  (* Lemma RStarConcatWeak : forall r1 r2 l b, RegMatch (RConcat r1 (RConcat (RStar r1) r2)) l b -> *)
-  (*                                      RegMatch (RConcat (RStar r1) r2) l b. *)
-  (*   intros r1 r2 l b H. *)
-  (*   destruct b. *)
-  (*   { *)
-  (*     inversion H. *)
-  (*     subst. *)
-  (*     inversion H4. *)
-  (*     subst. *)
-  (*     inversion H3. *)
-  (*     subst. *)
-  (*     inversion H1. *)
-  (*     inversion H0. *)
-  (*     rewrite app_assoc. *)
-  (*     constructor. *)
-  (*     { *)
-  (*       constructor. *)
-  (*       exists (l1 :: x); split. { simpl. subst. reflexivity. } { constructor; assumption. } *)
-  (*     } *)
-  (*     { *)
-  (*       exact H6. *)
-  (*     } *)
-  (*   } *)
-  (*   { *)
-  (*     constructor. *)
-  (*     intros left1 right1 H'. *)
-  (*     inversion H. *)
-  (*     subst. *)
-  (*   } *)
+  Definition LR (P : PEG) (r__cont : REG) (r__out : REG) : Prop :=
+    some_implies_match P r__cont r__out /\
+      none_implies_nomatch P r__cont r__out /\
+      blame_cont P r__cont r__out.
 
   Lemma NoPegEmp : forall p l o, PegMatch p l o -> l <> [].
     intros p l o m.
     induction m; try discriminate; try assumption.
   Qed.
 
-  (* Lemma NoStarBySubterm : forall p l o, PegMatch p l o -> o = None -> *)
-  (*                                  forall l1 c o', l = c :: l1 -> ~(PegMatch (PossesiveStar p) l o'). *)
+  (* CullToCont, exchange may be impossible.
+     Exchange probably depends on a lemma along the lines of culltocont,
+     because in the concat case, you need to show that after exchanging p2's remainder,
+     you can first cull p1's remainder then weaken it to what the exchanged p2 matches.
+     CullToCont is simply untrue. if you match the second term of an ordered choice,
+     you may need more than what the cont matches in order to witness that p1 cannot match.
+     So culltocont is likely false, and exchange is possibly false.
+     Chunkform is probably a fold
+   *)
+
+  (* Lemma CullToCont : forall p l o, PegMatch p l o -> forall l1 l2, o = Some (l1, l2) -> forall l2l l2r, l2 = l2l ++ l2r -> forall p', PegMatch p' l2 (Some (l2l, l2r)) -> PegMatch p (l1 ++ l2l) (Some (l1, l2l)). *)
   (*   intros p l o m. *)
   (*   induction m; try discriminate. *)
   (*   { *)
-  (*     intros H0 l1 c o' H1 H2. *)
-  (*     inversion H1. *)
-  (*     apply eq_dec_correct in H. *)
-  (*     subst c. *)
-  (*     inversion H2. *)
+  (*     intros l1 l2 H l2l l2r HConc p' m'. *)
+  (*     inversion H. *)
+  (*     subst. *)
+  (*     constructor. *)
+  (*   } *)
+  (*   { *)
+  (*     intros l5 l6 H l2l l2r HConc p' m'. *)
+  (*     subst. *)
+  (*     inversion H. *)
+  (*     subst. *)
+  (*     assert (PegMatch p2 (l3 ++ l2l) (Some (l3, l2l))) by (eapply IHm2; eauto). *)
+  (*     assert (PegMatch p1 (l1 ++ l3) (Some (l1, l3))). *)
   (*     { *)
-  (*       subst. *)
+  (*       eapply list_split in m2 as HLS. *)
+  (*       eapply IHm1. *)
+  (*       reflexivity. exact HLS. exact m2. *)
+  (*     } *)
+  (*     assert (WeakenMatch p1 l1 l3 l2l) by eapply MatchWeaken; eauto. *)
+  (*     assert (PegMatch p1 (l1 ++ l3 ++ l2l) (Some (l1, l3 ++ l2l))) by eauto. *)
+  (*     eapply CatS. *)
+  (*     { *)
+  (*       rewrite <- app_assoc. exact H3. *)
+  (*     } *)
+  (*     { *)
+  (*       exact H0. *)
   (*     } *)
   (*   } *)
+  (*   { *)
+  (*     intros l3 l4 H l2l l2r HConc p' m'. *)
+  (*     eapply ChoiceL. *)
+  (*     eapply IHm; eauto. *)
+  (*   } *)
+  (*   { *)
+  (*     intros l3 l4 H l2l l2r HConc p' m'. *)
+  (*     inversion H. *)
+  (*     subst. *)
+  (*     eapply list_split in m2 as HLS. *)
+      
+  (*     eapply ChoiceR. *)
+  (*     eapply IHm2; eauto. *)
+  (*   } *)
+
+  (* (* Okay, this approach hasn't been working.. I could.. *)
+  (*    Strengthen with a special case for concat. *)
+  (*    Try inducting over p instead. *)
+  (*    Triple induction for concat case (that would maybe make sense) *)
+  (*    Try to see why this is true by hand *)
+  (*    Adding a special char case might be the right thing to do... of course... *)
+  (*  *) *)
+  (* Lemma SubstituteRemainder : forall p l o, PegMatch p l o -> forall l1 l2, o = Some (l1, l2) -> forall l' l1' l2', PegMatch p l' (Some (l1', l2')) -> *)
+  (*                                                                                                  PegMatch p (l1 ++ l2') (Some (l1, l2')). *)
+  (*   intros p l o m. *)
+  (*   induction m; try discriminate. *)
+  (*   { *)
+  (*     intros l1 l2 Heqo l' l1' l2' m'. *)
+  (*     inversion Heqo. *)
+  (*     subst. *)
+  (*     inversion m'. *)
+  (*     subst. *)
+  (*     constructor. *)
+  (*   } *)
+  (*   { *)
+  (*     intros l5 l6 Heqo l' l1' l2' m'. *)
+  (*     inversion Heqo. *)
+  (*     subst. *)
+  (*     inversion m'. *)
+  (*     subst. *)
+  (*     assert (PegMatch p2 (l3 ++ l2') (Some (l3, l2'))). *)
+  (*     { *)
+  (*       eapply IHm2. reflexivity. exact H5. *)
+  (*     } *)
+      
+  (*     { *)
+  (*       eapply IHm1. reflexivity. exact H3. *)
+  (*     } *)
+  (*     assert (PegMatch p1 ()) *)
+  (*     assert (PegMatch p2 (l3 ++ l2') (Some (l3, l2'))). { eapply IHm2. reflexivity. exact H5. } *)
+  (*     rewrite <- app_assoc. *)
+  (*     assert (PegMatch p1 (l1 ++ l3) (Some (l1, l3))) *)
+  (*     eapply CatS. *)
+  (*     assert (PegMatch p1 (l1 ++ l2') (Some (l1, l2'))). { eapply IHm1. reflexivity. exact H3.} *)
+  (*     assert (PegMatch p1 (l3 ++ l2') (Some (l3, l2'))) *)
+  (*   } *)
+
+  Lemma PegMatchChunkFormStrong : forall p l o, PegMatch p l o -> forall l1 l2, o = Some (l1, l2) -> forall p', p = PossesiveStar p' ->
+                                                                                         exists ls, (concat ls = l1 /\ forall prf suf, prf ++ suf = ls -> PegMatch p ((concat suf) ++ l2) (Some ((concat suf), l2))).
+    intros p l o m.
+    induction m; try discriminate.
+    {
+      intros l1 l2 Heqo p' Heqp'.
+      inversion Heqo. inversion Heqp'. simpl.
+      exists [].
+      split.
+      { simpl. reflexivity. }
+      { intros prf suf HConc. symmetry in HConc. eapply catnil in HConc as Hnil. subst. simpl in HConc. subst. simpl. now constructor. }
+    }
+    {
+      intros l5 l6 Heqo p' Heqp'.
+      inversion Heqo. inversion Heqp'. simpl.
+      subst.
+      assert (exists ls : list (list Σ),
+           concat ls = l3 /\
+           (forall prf suf : list (list Σ),
+               prf ++ suf = ls -> PegMatch (PossesiveStar p') (concat suf ++ l6) (Some (concat suf, l6)))).
+      {
+        eapply IHm2; reflexivity.
+      }
+      inversion H.
+      inversion H0.
+      eapply list_split in m1 as HLS1.
+      eapply list_split in m2 as HLS2.
+      subst l2.
+      symmetry in H1.
+      subst.
+      exists (l1 :: x); split.
+      {
+        simpl. reflexivity.
+      }
+      {
+        intros prf suf HConc.
+        destruct prf eqn:heqprf.
+        {
+          simpl in HConc.
+          subst.
+          simpl.
+          rewrite <- app_assoc.
+          assert (PegMatch (PossesiveStar p') (concat x ++ l6) (Some (concat x, l6))).
+          {
+            eapply H2 with (prf := []). reflexivity.
+          }
+          eapply StarRec. { exact m1. } { exact H1. }
+        }
+        {
+          simpl in HConc.
+          inversion HConc.
+          subst l.
+          subst x.
+          inversion H0.
+          eapply H3 with (prf := l0).
+          reflexivity.
+        }
+      }
+    }
+  Qed.
+
+  Lemma PegMatchChunkForm : forall p l1 l2 l3, PegMatch (PossesiveStar p) l1 (Some (l2, l3)) ->
+                                          exists ls, (concat ls = l2 /\ forall prf suf, prf ++ suf = ls -> PegMatch (PossesiveStar p) ((concat suf) ++ l3) (Some ((concat suf), l3))).
+    eauto using PegMatchChunkFormStrong.
+    Qed.
 
   Lemma SomeImpliesMatchStarStrong :
     forall p l o, PegMatch p l o ->
              forall p', p = PossesiveStar p' ->
-             (forall r1 l1' l2' l3', LR p' r1 (PEGREG p' r1) l1' l2' l3') ->
+             (forall r__cont, LR p' r__cont (PEGREG p' r__cont)) ->
              forall l2 l3 : list Σ, o = (Some (l2, l3)) -> forall r, RegMatch r l3 true ->
                                                           RegMatch (PEGREG p r) l true.
     intros p l o m.
     induction m; try discriminate.
     {
-      intros p' Heq1 HLR l2 l3 Heq2 r HMatch.
-      inversion Heq2.
-      inversion Heq1.
-      subst.
+      intros p' Heqp HLR l2 l3 Heqo r HCont.
+      inversion Heqp.
+      inversion Heqo.
+      subst p'. subst.
       destruct l3. { eapply NoPegEmp in m. contradiction. }
       simpl.
       replace (s :: l3) with ([] ++ (s :: l3)) by eauto.
@@ -2951,15 +2854,40 @@ Section PegReg.
       constructor.
       eapply RIntersectionFL.
       constructor.
-      intros l' H'.
+      assert (DoesNotMatch p1 (s :: l3)). { hnf. now right. }
+      assert (forall l1 l2, l1 ++ l2 = s :: l3 -> DoesNotMatch p1 l1).
+      {
+        intros l1 l2 H'.
+        assert (StrengthenFail p1 l1 l2) by eauto using MatchStrengthen.
+        eapply H0. now rewrite H'.
+      }
+      assert (forall l1 l2, l1 ++ l2 = s :: l3 -> RegMatch (PEGREG p1 REmp) l1 false).
+      {
+        intros l1 l2 H'.
+        assert (DoesNotMatch p1 l1) by eauto.
+        assert (none_implies_nomatch p1 REmp (PEGREG p1 REmp)) by apply HLR.
+        unfold none_implies_nomatch in H2.
+        now apply H2.
+      }
+      assert (s :: l3 = [] \/ forall l' : list (list Σ), concat l' = s :: l3 -> exists e : list Σ, In e l' /\ RegMatch (PEGREG p1 REmp) e false).
+      {
+        eapply splits_imply_concat_inclusion.
+        exact H1.
+      }
+      inversion H2. { discriminate. }
+      assumption.
     }
     {
       intros p' Heq1 HLR l5 l6 Heq2 r HMatch.
       inversion Heq2.
       inversion Heq1.
       subst.
-      apply list_split in m1 as HLS.
-      subst l0.
+      simpl.
+      apply list_split in m1 as HLS1.
+      apply list_split in m2 as HLS2.
+      subst.
+      rewrite app_assoc.
+      constructor.
       assert (RegMatch (PEGREG (PossesiveStar p') r) l2 true).
       {
         eapply IHm2. { reflexivity. } { assumption. } { reflexivity. } { assumption. }
