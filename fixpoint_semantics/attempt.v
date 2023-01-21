@@ -2951,64 +2951,65 @@ Section PegReg.
              (forall r__cont, LR p' r__cont (PEGREG p' r__cont)) ->
              forall l2 l3 : list Σ, o = (Some (l2, l3)) -> forall r, RegMatch r l3 true ->
                                                           RegMatch (PEGREG p r) l true.
-    intros p l o m.
-    induction m; try discriminate.
+    intros p l o m p' Heqp HLR l1 l2 Heqo r HMatch.
+    inversion Heqp. inversion Heqo. subst.
+    simpl.
+    apply list_split in m as HLS. subst l.
+    apply PegMatchChunkForm in m as HChunkform.
+    constructor.
     {
-      intros p' Heqp HLR l2 l3 Heqo r HCont.
-      inversion Heqp.
-      inversion Heqo.
-      subst p'. subst.
-      destruct l3. { eapply NoPegEmp in m. contradiction. }
-      simpl.
-      replace (s :: l3) with ([] ++ (s :: l3)) by eauto.
-      constructor. { constructor. exists []; split; eauto. }
-      unfold RSetMinus.
+      constructor.
+      inversion HChunkform.
+      inversion H1.
+      eapply SomeImpliesMatchStarChunkForm in H3.
+      2: { rewrite H2. exact m. }
+      2: { exact HLR. }
+      exists x; split; eauto.
+    }
+    {
       constructor; try assumption.
       constructor.
-      eapply RIntersectionFL.
       constructor.
-      assert (DoesNotMatch p1 (s :: l3)). { hnf. now right. }
-      assert (forall l1 l2, l1 ++ l2 = s :: l3 -> DoesNotMatch p1 l1).
-      {
-        intros l1 l2 H'.
-        assert (StrengthenFail p1 l1 l2) by eauto using MatchStrengthen.
-        eapply H0. now rewrite H'.
-      }
-      assert (forall l1 l2, l1 ++ l2 = s :: l3 -> RegMatch (PEGREG p1 REmp) l1 false).
-      {
-        intros l1 l2 H'.
-        assert (DoesNotMatch p1 l1) by eauto.
-        assert (none_implies_nomatch p1 REmp (PEGREG p1 REmp)) by apply HLR.
-        unfold none_implies_nomatch in H2.
-        now apply H2.
-      }
-      assert (s :: l3 = [] \/ forall l' : list (list Σ), concat l' = s :: l3 -> exists e : list Σ, In e l' /\ RegMatch (PEGREG p1 REmp) e false).
-      {
-        eapply splits_imply_concat_inclusion.
-        exact H1.
-      }
-      inversion H2. { discriminate. }
-      assumption.
-    }
-    {
-      intros p' Heq1 HLR l5 l6 Heq2 r HMatch.
-      inversion Heq2.
-      inversion Heq1.
-      subst.
-      simpl.
-      apply list_split in m1 as HLS1.
-      apply list_split in m2 as HLS2.
-      subst.
-      rewrite app_assoc.
-      eapply PegMatchChunkForm in m2 as HChunkForm.
       constructor.
-      assert (RegMatch (PEGREG (PossesiveStar p') r) l2 true).
+      intros l' HConcat.
+      apply StarImpliesContFail in m as HFail.
+      assert (forall l' l'', l' ++ l'' = l2 -> StrengthenFail p' l' l'').
       {
-        eapply IHm2. { reflexivity. } { assumption. } { reflexivity. } { assumption. }
+        intros l'0 l'' HApp. rewrite <- HApp in m.
+        assert (DoesNotMatch p' (l'0 ++ l'')) by (right; now rewrite HApp).
+        eauto using MatchStrengthen.
+      }
+      assert (forall l' l'', l' ++ l'' = l2 -> DoesNotMatch p' l').
+      {
+        intros l'0 l'' HApp.
+        eapply H1; eauto using MatchStrengthen.
+        right. now rewrite HApp.
+      }
+      assert (forall l' l'', l' ++ l'' = l2 -> RegMatch (PEGREG p' REmp) l' false).
+      {
+        intros l'0 l'' HApp.
+        assert (DoesNotMatch p' l'0) by eauto.
+        assert (none_implies_nomatch p' REmp (PEGREG p' REmp)) by apply HLR.
+        now apply H4.
+      }
+      assert (l2 = [] \/ (forall ell, concat ell = l2 -> exists e : list Σ, In e ell /\ RegMatch (PEGREG p' REmp) e false)) by (eapply splits_imply_concat_inclusion; auto).
+      inversion H4.
+      {
+        subst l2.
+        rewrite H5 in HFail.
+        assert ([] <> []) by eauto using NoPegEmp.
+        contradiction.
+      }
+      {
+        assert (exists e : list Σ, In e l' /\ RegMatch (PEGREG p' REmp) e false) by (eapply H5; auto).
+        inversion H6.
+        inversion H7.
+        exists x; split; auto.
       }
     }
+  Qed.
 
-  Theorem pegreg_correct : forall P r1 l1 l2 l3, LR P r1 (PEGREG P r1) l1 l2 l3.
+  Theorem pegreg_correct : forall P r, LR P r1 (PEGREG P r).
     intros P.
     induction P.
     {
