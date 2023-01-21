@@ -2841,6 +2841,29 @@ Section PegReg.
     eauto using PegMatchChunkFormStrong.
   Qed.
 
+  Lemma PegMatchInversion : forall ls p l3,
+      (forall prf a suf, prf ++ (a :: suf) = ls -> PegMatch p ((concat (a :: suf)) ++ l3) (Some (a, (concat suf) ++ l3))) -> PegMatch p l3 None -> PegMatch (PossesiveStar p) ((concat ls) ++ l3) (Some ((concat ls), l3)).
+    intros ls.
+    induction ls; try eauto using PegMatch.
+    intros p l3 HSuf HTail.
+    assert (
+        (forall (prf : list (list Σ)) (a : list Σ) (suf : list (list Σ)),
+          prf ++ a :: suf = ls -> PegMatch p (concat (a :: suf) ++ l3) (Some (a, concat suf ++ l3)))
+      ).
+    {
+      intros prf a0 suf HApp.
+      apply HSuf with (prf := a :: prf). rewrite <- HApp. reflexivity.
+    }
+    assert (PegMatch (PossesiveStar p) (concat ls ++ l3) (Some (concat ls, l3))) by (eapply IHls; assumption).
+    simpl. rewrite <- app_assoc. econstructor.
+    {
+      simpl in HSuf.
+      rewrite app_assoc.
+      eapply HSuf with (prf := []). simpl. reflexivity.
+    }
+    exact H0.
+  Qed.
+
   Lemma PegregStarBase : forall p, (forall r__cont, LR p r__cont (PEGREG p r__cont)) ->
                               forall l1 l3, PegMatch (PossesiveStar p) l1 (Some ([], l3)) ->
                                        forall r, RegMatch r l3 true ->
@@ -2880,38 +2903,44 @@ Section PegReg.
   Qed.
 
 
-  (* What you probably want is to induct on the chunkform.
-     *)
+  (*
+   * I'm not sure why this doesn't work.
+
+   * What you probably want is to induct on the chunkform, then induct on the match.
+   *)
+  (* OK lets see:
+   *)
   Lemma SomeImpliesMatchStarChunkForm :
     forall ls p l3,
-      (forall prf suf, prf ++ suf = ls -> PegMatch p ((concat suf) ++ l3) (Some ((concat suf), l3))) ->
-      forall l1 l2, PegMatch (PossesiveStar p) l1 (Some (l2, l3)) -> (concat ls) = l2 ->
+      (forall prf a suf, prf ++ (a :: suf) = ls -> PegMatch p ((concat (a :: suf)) ++ l3) (Some (a, (concat suf) ++ l3))) ->
+      forall l1, PegMatch (PossesiveStar p) l1 (Some (concat ls, l3)) ->
                (forall r__cont, LR p r__cont (PEGREG p r__cont)) ->
-               forall r, RegMatch r l3 true -> RegMatch (PEGREG (PossesiveStar p) r) l1 true.
+               (* forall r, RegMatch r l3 true -> *)
+                    (Forall (fun l => RegMatch (PEGREG p REmp) l true) ls).
+                    (* RegMatch (PEGREG (PossesiveStar p) r) l1 true). *)
     intros ls.
-    induction ls.
+    induction ls. { constructor. }
     {
       intros.
-      simpl in H1.
-      subst l2.
-      eauto using PegregStarBase.
-    }
-    {
-      intros p l3 HChunkForm l1 l2 m HConcat HRemainder r HMatch.
-      simpl.
-      apply list_split in m as HLS. subst l1.
-      rewrite <- HConcat.
+      assert
+         (forall (prf : list (list Σ)) (a : list Σ) (suf : list (list Σ)),
+             prf ++ a :: suf = ls -> PegMatch p (concat (a :: suf) ++ l3) (Some (a, concat suf ++ l3))).
+      {
+        intros prf a0 suf HSuf.
+        eapply H with (prf := a :: prf). now rewrite <- HSuf.
+      }
       constructor.
       {
-        constructor.
-        exists (a :: ls); split; try reflexivity.
-        constructor.
+        assert (PegMatch p (concat (a :: ls) ++ l3) (Some (a, (concat ls) ++ l3))).
+        { eapply H with (prf := []). simpl. reflexivity. }
+        assert (strengthens_to_empty p REmp (PEGREG p REmp)) by eapply H1.
+        eauto.
+      }
+      {
+        apply IHls with (l3 := l3) (l1 := (concat ls) ++ l3); try assumption.
         {
-          assert (PegMatch (PossesiveStar p) (concat (a :: ls) ++ l3) (Some (concat (a :: ls), l3))). { eapply HChunkForm with (prf := []). reflexivity. }
-          assert (stren)
-          Print LR.
-          Search strengthens_to_empt.
-          assert strengthens_to_empty
+          apply StarImpliesContFail in H0 as HContFail.
+          eapply PegMatchInversion; try assumption.
         }
       }
     }
