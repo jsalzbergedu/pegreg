@@ -2915,9 +2915,7 @@ Section PegReg.
       (forall prf a suf, prf ++ (a :: suf) = ls -> PegMatch p ((concat (a :: suf)) ++ l3) (Some (a, (concat suf) ++ l3))) ->
       forall l1, PegMatch (PossesiveStar p) l1 (Some (concat ls, l3)) ->
                (forall r__cont, LR p r__cont (PEGREG p r__cont)) ->
-               (* forall r, RegMatch r l3 true -> *)
                     (Forall (fun l => RegMatch (PEGREG p REmp) l true) ls).
-                    (* RegMatch (PEGREG (PossesiveStar p) r) l1 true). *)
     intros ls.
     induction ls. { constructor. }
     {
@@ -2944,6 +2942,7 @@ Section PegReg.
         }
       }
     }
+    Qed.
 
 
   Lemma SomeImpliesMatchStarStrong :
