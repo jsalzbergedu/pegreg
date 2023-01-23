@@ -7,6 +7,12 @@ Require Import Lia.
 
 Axiom lem : forall P : Prop, P \/ ~P.
 
+Lemma dn : forall P, ~ ~ P -> P.
+  intros P H.
+  unfold not in H.
+  assert (P \/ ~P) by apply lem.
+  inversion H0. { assumption. } { exfalso. apply H. apply H1. } Qed.
+
 
 Section PegReg.
   Context (Σ : finType).
@@ -1019,7 +1025,7 @@ Section PegReg.
       exact [].
       Qed.
 
-    Definition DoesNotMatch (P : PEG) (l : list Σ) := (forall l1 l2, PegMatch P l (Some (l1, l2)) -> False) \/ (PegMatch P l None).
+    Definition DoesNotMatch (P : PEG) (l : list Σ) := (forall l1 l2, PegMatch P l (Some (l1, l2)) -> False).
 
     Definition PPartial (p : PEG) := forall l o, PegMatch p l o -> forall o', PegMatch p l o' -> o = o'.
 
@@ -1233,21 +1239,20 @@ Section PegReg.
       assert (PegMatch p l1 None \/ ~ PegMatch p l1 None) by eauto.
       inversion H0.
       {
-        now right.
+        intros l0 l3 H''.
+        assert (Some (l0, l3) = None) by eauto using PegPartial.
+        discriminate.
       }
       {
-        left.
         intros l1' l2' H''.
+        apply H' with (l1 := l1') (l2 := l2' ++ l2).
         eapply list_split in H'' as HLS1.
         assert (PegMatch p (l1' ++ l2') (Some (l1', l2'))) by (rewrite <- HLS1; assumption).
         assert (WeakenMatch p l1' l2' l2). { eapply MatchWeaken. }
         hnf in H3.
         rewrite app_assoc in H3.
         repeat rewrite <- HLS1 in H3.
-        assert (PegMatch p (l1 ++ l2) (Some (l1', l2' ++ l2))) by eauto.
-        inversion H'; try eauto.
-        assert (Some (l1', l2' ++ l2) = None) by eauto using PegPartial.
-        discriminate.
+        now eapply H3.
       }
     Qed.
 
@@ -2667,8 +2672,7 @@ Section PegReg.
     some_implies_match P r__cont r__out /\
       none_implies_nomatch P r__cont r__out /\
       blame_cont P r__cont r__out /\
-      strengthens_to_empty P r__cont r__out
-  .
+      strengthens_to_empty P r__cont r__out.
 
   Lemma NoPegEmp : forall p l o, PegMatch p l o -> l <> [].
     intros p l o m.
@@ -2882,7 +2886,8 @@ Section PegReg.
     {
       intros prf suf HConc.
       rewrite <- HConc in HContFail.
-      assert (DoesNotMatch p (prf ++ suf)) by (right; assumption).
+      assert (DoesNotMatch p (prf ++ suf)).
+      { intros l1' l2' H'. assert (Some (l1', l2') = None) by eauto using PegPartial. discriminate. }
       eapply MatchStrengthen. exact H.
     }
     assert ((s :: l) = [] \/ forall l', concat l' = (s :: l) -> exists e, In e l' /\ DoesNotMatch p e).
@@ -2903,13 +2908,6 @@ Section PegReg.
   Qed.
 
 
-  (*
-   * I'm not sure why this doesn't work.
-
-   * What you probably want is to induct on the chunkform, then induct on the match.
-   *)
-  (* OK lets see:
-   *)
   Lemma SomeImpliesMatchStarChunkForm :
     forall ls p l3,
       (forall prf a suf, prf ++ (a :: suf) = ls -> PegMatch p ((concat (a :: suf)) ++ l3) (Some (a, (concat suf) ++ l3))) ->
@@ -2976,14 +2974,15 @@ Section PegReg.
       assert (forall l' l'', l' ++ l'' = l2 -> StrengthenFail p' l' l'').
       {
         intros l'0 l'' HApp. rewrite <- HApp in m.
-        assert (DoesNotMatch p' (l'0 ++ l'')) by (right; now rewrite HApp).
+        assert (DoesNotMatch p' (l'0 ++ l'')).
+        { rewrite HApp. intros l1' l2' H'. assert (Some (l1', l2') = None) by eauto using PegPartial. discriminate. }
         eauto using MatchStrengthen.
       }
       assert (forall l' l'', l' ++ l'' = l2 -> DoesNotMatch p' l').
       {
         intros l'0 l'' HApp.
         eapply H1; eauto using MatchStrengthen.
-        right. now rewrite HApp.
+        rewrite HApp. intros l1' l2' H'. assert (Some (l1', l2') = None) by eauto using PegPartial. discriminate.
       }
       assert (forall l' l'', l' ++ l'' = l2 -> RegMatch (PEGREG p' REmp) l' false).
       {
@@ -3017,16 +3016,10 @@ Section PegReg.
       intros H.
       apply eq_dec_correct in Heqdc as Heqs.
       subst s.
-      inversion H.
       {
         exfalso.
-        apply H0 with (l1 := [c]) (l2 := l).
+        apply H with (l1 := [c]) (l2 := l).
         constructor.
-      }
-      {
-        inversion H0.
-        subst.
-        apply eq_dec_correct in H3; contradiction.
       }
     }
     {
@@ -3094,45 +3087,14 @@ Section PegReg.
     intros p1 p2 p3 l.
     {
       intros Hdnm.
-      inversion Hdnm.
-      {
-        left.
-        intros l1 l2 H'.
-        apply H with (l1 := l1) (l2 := l2).
-        inversion H'.
-        subst.
-        inversion H6.
-        subst.
-        rewrite app_assoc.
-        eapply CatS. { eapply CatS; eauto. } eauto.
-      }
-      {
-        right.
-        inversion H.
-        {
-          subst.
-          inversion H3.
-          {
-            subst.
-            now eapply CatFail1.
-          }
-          {
-            subst.
-            apply list_split in H2 as HLS. subst l.
-            eapply CatFail2. exact H2. eapply CatFail1. exact H5.
-          }
-        }
-        {
-          subst.
-          inversion H2.
-          subst.
-          apply list_split in H2 as HLS.
-          rewrite <- app_assoc in HLS. subst l.
-          eapply CatFail2. exact H6.
-          apply list_split in H8 as HLS. subst l4.
-          eapply CatFail2. exact H8. exact H4.
-        }
-      }
+      intros l1 l2 m'.
+      apply Hdnm with (l1 := l1) (l2 := l2).
+      inversion m'.
+      subst.
+      inversion H5.
+      subst.
+      rewrite app_assoc.
+      eapply CatS. { eapply CatS; eauto. } eauto.
     }
   Qed.
 
@@ -3163,6 +3125,7 @@ Section PegReg.
       exact H2.
     }
   Qed.
+
   Lemma headeq : forall {T}, forall l2 l3 l1 : list T, l2 ++ l1 = l3 ++ l1 -> l2 = l3.
     intros T l2.
     induction l2.
@@ -3170,118 +3133,49 @@ Section PegReg.
     { intros l3 l1 H. destruct l3. { simpl in H. symmetry in H. eapply impossible_listapp in H. contradiction. } { inversion H. simpl. assert (l2 = l3) by eauto. rewrite <- H0. reflexivity. } }.
     Qed.
 
-  (*
-  Lemma dnmcat : forall P1 P2 l, DoesNotMatch (Concat P1 P2) l ->
-                             ((exists l1 l2, l1 ++ l2 = l /\ DoesNotMatch P1 l1) \/ (exists l3 l4, (PegMatch P1 l (Some (l3, l4))) /\ DoesNotMatch P2 l4)).
-   *)
-  Lemma dnmcat : forall P1 P2 l, DoesNotMatch (Concat P1 P2) l ->
-                             ((exists l1 l2, l1 ++ l2 = l /\ DoesNotMatch P1 l1) \/ (exists l3 l4, (PegMatch P1 l (Some (l3, l4))) /\ DoesNotMatch P2 l4)).
-    intros P1.
-    induction P1.
+  Lemma dnmcat' : forall l1 l2 P1 P2, DoesNotMatch (Concat P1 P2) (l1 ++ l2) ->
+                                 DoesNotMatch P1 l1 \/ (exists l3 l4, PegMatch P1 (l1 ++ l2) (Some (l3, l4)) /\ DoesNotMatch P2 l4).
+    intros l1 l2 P1 P2 H.
+    assert (DoesNotMatch P1 l1 \/ ~ (DoesNotMatch P1 l1)) by apply lem.
+    inversion H0; try (left; assumption).
+    right. unfold DoesNotMatch in H1.
+    assert ((exists l3 l4 : list Σ, PegMatch P1 l1 (Some (l3, l4))) \/ ~(exists l3 l4 : list Σ, PegMatch P1 l1 (Some (l3, l4)))) by apply lem.
+    inversion H2.
+    2: {
+      exfalso.
+      eapply H1.
+      intros l2' l3' H'.
+      eapply H3.
+      exists l2'. exists l3'. exact H'.
+    }
+    inversion H3.
+    inversion H4.
+    apply list_split in H5 as HLS1. subst l1.
+    assert (WeakenMatch P1 x x0 l2) by eapply MatchWeaken.
+    assert (PegMatch P1 (x ++ x0 ++ l2) (Some (x, x0 ++ l2))) by eauto.
+    assert ((exists l2' l3', PegMatch P2 (x0 ++ l2) (Some (l2', l3'))) \/ ~(exists l2' l3', PegMatch P2 (x0 ++ l2) (Some (l2', l3')))) by apply lem.
+    inversion H8.
     {
-      intros P2.
-      destruct l eqn:eql.
-      {
-        left. exists []. exists []. split; auto. left. intros l1 l2 H'. assert ([] <> []) by eauto using NoPegEmp. contradiction.
-      }
-      {
-        destruct (eq_dec c s) eqn:Eqcdec.
-        {
-          apply eq_dec_correct in Eqcdec. subst s.
-          intros H.
-          right.
-          exists [c]. exists l0. split; try eauto using PegMatch.
-          inversion H.
-          {
-            unfold DoesNotMatch.
-            left.
-            intros l1 l2 H'.
-            apply H0 with (l1 := [c] ++ l1) (l2 := l2).
-            eapply CatS. { constructor. } { exact H'. }
-          }
-          {
-            right.
-            inversion H0. { subst. inversion H4. eapply eq_dec_correct in H3. contradiction. }
-            subst.
-            inversion H3. subst. assumption.
-          }
-        }
-        {
-          intros H.
-          left.
-          exists [s]. exists l0. split; auto. right. now constructor.
-        }
-      }
+      inversion H9. inversion H10.
+      rewrite <- app_assoc in H.
+      assert (PegMatch (Concat P1 P2) (x ++ x0 ++ l2) (Some (x ++ x1, x2))) by eauto using PegMatch.
+      exfalso.
+      eapply H; eauto.
     }
     {
-      intros P2 l H.
-      eapply dnm_catassoc in H as HDNMassoc.
-      assert (
-           (exists l1 l2 : list Σ, l1 ++ l2 = l /\ DoesNotMatch P1_1 l1) \/
-           (exists l3 l4 : list Σ, PegMatch P1_1 l (Some (l3, l4)) /\ DoesNotMatch (Concat P1_2 P2) l4)
-        ) by (eapply IHP1_1; assumption).
-      inversion H0.
+      assert (forall l2' l3', ~ PegMatch P2 (x0 ++ l2) (Some (l2', l3'))).
       {
-        inversion H1. inversion H2. inversion H3. subst.
-        left. exists x. exists x0. split; auto.
-        left.
-        intros l1 l2 H'.
-        inversion H'.
-        subst.
-        inversion H5. { eapply H4. exact H9. } { assert ((Some (l3, l4)) = None) by eauto using PegPartial. discriminate. }
+        intros l2' l3' H'.
+        apply H9. exists l2'. exists l3'. exact H'.
       }
-      {
-        inversion H1. inversion H2. inversion H3.
-        assert (
-            (exists l1 l2 : list Σ, l1 ++ l2 = x0 /\ DoesNotMatch P1_2 l1) \/
-            (exists l3 l4 : list Σ, PegMatch P1_2 x0 (Some (l3, l4)) /\ DoesNotMatch P2 l4)
-          ) by (eapply IHP1_2; auto).
-        inversion H6.
-        {
-          inversion H7. inversion H8. inversion H9.
-          apply list_split in H4 as HLS. subst.
-          inversion H11.
-          {
-            left. exists (x ++ x1). exists x2. split; try eauto using app_assoc.
-            left. intros l1 l2 H'.
-            inversion H'. subst.
-            apply list_split in H16 as HLS. rewrite HLS in H16.
-            assert (WeakenMatch P1_1 l3 l4 x2) by eapply MatchWeaken.
-            assert (PegMatch P1_1 (l3 ++ l4 ++ x2) (Some (l3, l4 ++ x2))) by eauto.
-            rewrite app_assoc in H13.
-            rewrite <- HLS in H13.
-            rewrite <- app_assoc in H13.
-            assert (Some (l3, l4 ++ x2) = (Some (x, x1 ++ x2))) by eauto using PegPartial.
-            inversion H14. eapply headeq in H19. subst l4. subst l3.
-            eapply H10. exact H18.
-          }
-          {
-            assert (WeakenFail P1_2 x1 x2) by (eapply MatchWeaken; exact []).
-            assert (PegMatch P1_2 (x1 ++ x2) None) by eauto.
-            assert (PegMatch (Concat P1_1 P1_2) (x ++ x1 ++ x2) None) by eauto using CatFail2.
-            left. exists (x ++ x1 ++ x2). exists []. split; eauto using app_nil_r.
-            right. assumption.
-          }
-        }
-        {
-          inversion H7. inversion H8. inversion H9.
-          apply list_split in H4 as HLS1.
-          apply list_split in H10 as HLS2.
-          subst.
-          right. exists (x ++ x1). exists x2. split; eauto using CatS.
-        }
-      }
+      unfold not in H10.
+      assert (DoesNotMatch P2 (x0 ++ l2)). { hnf. eapply H10. }
+      exists x. exists (x0 ++ l2). split. rewrite <- app_assoc. all: assumption.
     }
-    {
-      intros P2 l H.
-      inversion H.
-      {
-        
-      }
-    }
+    Qed.
 
-  Theorem pegreg_correct : forall P r, LR P r (PEGREG P r).
-    intros P.
+
+  Theorem pegreg_correct : forall P r, LR P r (PEGREG P r). intros P.
     induction P.
     {
       intros r.
@@ -3354,53 +3248,41 @@ Section PegReg.
         (* Either p1 does not match all prefixes of l, or it matches a prefix of l, by lem. or maybe we could induct over l
          *)
         assert (none_implies_nomatch P1 (PEGREG P2 r) (PEGREG P1 (PEGREG P2 r))) by eapply IHP1.
-        inversion HDnm.
+        replace l with (l ++ []) in HDnm by eauto using app_nil_r.
+        assert ((DoesNotMatch P1 (l)) \/ (exists l1 l2, PegMatch P1 (l ++ []) (Some (l1, l2)) /\ DoesNotMatch P2 l2)). { eapply dnmcat'. exact HDnm. }
+        inversion H0.
         {
-          apply H.
-          hnf.
-          left.
-        }
-        unfold none_implies_nomatch.
-        intros H.
-        inversion H.
-        {
-          subst.
-          assert (LR P1 (PEGREG P2 r1) (PEGREG P1 (PEGREG P2 r1)) l1 l1 []) by eauto.
-          apply LR_Implies_NoneNoMatch with (r__cont := (PEGREG P2 r1)) (r__out := (PEGREG P1 (PEGREG P2 r1))) in H0.
-          unfold none_implies_nomatch in H0.
-          apply H0.
-          assumption.
+          now apply H.
         }
         {
-          subst.
-          assert (LR P2 r1 (PEGREG P2 r1) l5 l5 []) by eauto.
-          apply LR_Implies_NoneNoMatch with (r__cont := r1) (r__out := (PEGREG P2 r1)) in H0.
-          unfold none_implies_nomatch in H0.
-          assert (RegMatch (PEGREG P2 r1) l5 false) by eauto.
-          assert (LR P1 (PEGREG P2 r1) (PEGREG P1 (PEGREG P2 r1)) l1 l4 l5) by eauto.
-          apply LR_Implies_BlameCont in H3.
-          unfold blame_cont in H3.
-          eapply H3.
-          exact H2.
-          assumption.
+          rewrite app_nil_r in H1.
+          inversion H1. inversion H2. inversion H3.
+          assert (none_implies_nomatch P2 r (PEGREG P2 r)) by eapply IHP2.
+          assert (RegMatch (PEGREG P2 r) x0 false) by eauto.
+          assert (blame_cont P1 (PEGREG P2 r) (PEGREG P1 (PEGREG P2 r))). { eapply IHP1. }
+          eauto.
         }
       }
       {
-        unfold blame_cont.
-        intros H1 H2.
+        intros l1 l2 l3 H1 H2.
         inversion H1.
         subst.
-        assert (LR P2 r1 (PEGREG P2 r1) l5 l6 l3) by eauto.
-        apply LR_Implies_BlameCont in H as HBlameCont.
-        assert (LR P1 (PEGREG P2 r1) (PEGREG P1 (PEGREG P2 r1)) l1 l4 l5) by eauto.
-        apply LR_Implies_BlameCont in H0 as HBlameCont0.
-        unfold blame_cont in HBlameCont.
-        unfold blame_cont in HBlameCont0.
+        assert (blame_cont P2 r (PEGREG P2 r)) as HBlameCont by eapply IHP2.
+        assert (blame_cont P1 (PEGREG P2 r) (PEGREG P1 (PEGREG P2 r))) as HBlameCont0 by eapply IHP1.
         eapply HBlameCont0.
         exact H5.
         eapply HBlameCont.
         exact H7.
         exact H2.
+      }
+      {
+        intros l1 l2 l3 m Heqr. subst r.
+        inversion m.
+        subst.
+        assert (strengthens_to_empty P2 REmp (PEGREG P2 REmp)) by eapply IHP2.
+        assert (RegMatch (PEGREG P2 REmp) l6 true) by eauto.
+        assert (some_implies_match P1 (PEGREG P2 REmp) (PEGREG P1 (PEGREG P2 REmp))) by eapply IHP1.
+        eapply H1.
       }
     }
     {
