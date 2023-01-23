@@ -2460,7 +2460,7 @@ Section PegReg.
         RUnion p1r p2r
     | PossesiveStar p1 =>
         let p1r := RStar (PEGREG p1 REmp) in
-        let p2r := (RSetMinus r (RIntersection p1r r)) in
+        let p2r := (RUnion (RSetMinus r (RIntersection p1r r)) (RIntersection r REmp)) in
         RConcat p1r p2r
     end.
 
@@ -2483,7 +2483,7 @@ Section PegReg.
         inversion H.
       }
     }
-    Qed.
+  Qed.
 
   Lemma two_one_length_one_one_length_impossible : forall T, forall l1 l2 : list T, forall c1 c2 c3 : T,
       (c1 :: l1) ++ (c2 :: l2) = [c3] -> False.
@@ -2778,46 +2778,6 @@ Section PegReg.
     exact H0.
   Qed.
 
-  Lemma PegregStarBase : forall p, (forall r__remainder, LR p r__remainder (PEGREG p r__remainder)) ->
-                              forall l1 l3, PegMatch (PossesiveStar p) l1 (Some ([], l3)) ->
-                                       forall r, RegMatch r l3 true ->
-                                            RegMatch (PEGREG (PossesiveStar p) r) l1 true.
-    intros p HLR l1 l3 m r HMatch.
-    destruct l1 eqn:eqnl1; try (exfalso; eapply NoPegEmp; eassumption).
-    simpl.
-    apply list_split in m as HLS. simpl in HLS. subst l3.
-    replace (s :: l) with ([] ++ (s :: l)) by reflexivity.
-    eapply RConcatS; try (constructor; exists []; auto).
-    constructor; try assumption.
-    constructor.
-    constructor.
-    apply StarImpliesRemainderFail in m as HRemainderFail.
-    assert (forall prf suf, prf ++ suf = (s :: l) -> DoesNotMatch p prf).
-    {
-      intros prf suf HConc.
-      rewrite <- HConc in HRemainderFail.
-      assert (DoesNotMatch p (prf ++ suf)).
-      { intros l1' l2' H'. assert (Some (l1', l2') = None) by eauto using PegPartial. discriminate. }
-      eapply MatchStrengthen. exact H.
-    }
-    assert ((s :: l) = [] \/ forall l', concat l' = (s :: l) -> exists e, In e l' /\ DoesNotMatch p e).
-    {
-      eapply splits_imply_concat_inclusion.
-      exact H.
-    }
-    inversion H0. { discriminate. }
-    constructor.
-    intros l' HConc.
-    assert (exists e : list Σ, In e l' /\ DoesNotMatch p e) by (eapply H1; assumption).
-    inversion H2.
-    inversion H3.
-    assert (none_implies_nomatch p REmp (PEGREG p REmp)) by apply HLR.
-    unfold none_implies_nomatch in H6.
-    assert (RegMatch (PEGREG p REmp) x false). { eapply H6. exact H5. }
-    exists x; split; assumption.
-  Qed.
-
-
   Lemma SomeImpliesMatchStarChunkForm :
     forall ls p l3,
       (forall prf a suf, prf ++ (a :: suf) = ls -> PegMatch p ((concat (a :: suf)) ++ l3) (Some (a, (concat suf) ++ l3))) ->
@@ -2885,7 +2845,14 @@ Section PegReg.
       exists x; split; eauto.
     }
     {
-      constructor; try assumption.
+      destruct prf eqn:Heqprf.
+      {
+        eapply RUnionSR.
+        constructor. { assumption. } { constructor. }
+      }
+      rewrite <- Heqprf in * |- *.
+      eapply RUnionSL.
+      constructor. try assumption.
       constructor.
       constructor.
       constructor.
@@ -2907,17 +2874,8 @@ Section PegReg.
         now apply H5.
       }
       assert (prf = [] \/ (forall ell, concat ell = prf -> exists e : list Σ, In e ell /\ RegMatch (PEGREG p' REmp) e false)) by (eapply splits_imply_concat_inclusion; auto).
-      inversion H5.
-      {
-        rewrite H6 in HConcat.a
-      }
-      {
-        eapply H5.
-        assert (exists e : list Σ, In e l' /\ RegMatch (PEGREG p' REmp) e false) by (eapply H5; auto).
-        inversion H6.
-        inversion H7.
-        exists x; split; auto.
-      }
+      inversion H5; try (subst prf; discriminate).
+      eapply H6; assumption.
     }
   Qed.
 
@@ -3032,7 +2990,7 @@ Section PegReg.
       assert (DoesNotMatch P2 (x0 ++ l2)). { hnf. eapply H10. }
       exists x. exists (x0 ++ l2). split. rewrite <- app_assoc. all: assumption.
     }
-    Qed.
+  Qed.
 
 
   Theorem pegreg_correct : forall P r, LR P r (PEGREG P r). intros P.
@@ -3140,11 +3098,15 @@ Section PegReg.
       {
         unfold some_implies_match.
         intros l1 l2 l3 prf suf m Heql3 mr.
-        apply StarImpliesRemainderFail in H1 as HCF.
-        apply list_split in H1 as HLS.
-        rewrite HLS.
+        apply StarImpliesRemainderFail in m as HCF.
+        eapply SomeImpliesMatchStarStrong; try eauto.
+        rewrite <- Heql3. reflexivity.
+      }
+      {
+        unfold none_implies_nomatch.
+        intros l1 H.
         simpl.
-        assert (LR P l3 (PEGREG P))
+        unfold DoesNotMatch in H.
       }
     }
   (* Fixpoint LR (P : PEG) (r__cont) : Prop := *)
