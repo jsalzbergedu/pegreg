@@ -2672,8 +2672,7 @@ Section PegReg.
 
 
   Definition LR (P : PEG) (r__remainder : REG) (r__out : REG) : Prop :=
-    some_implies_match P r__remainder r__out /\
-      none_implies_nomatch P r__remainder r__out /\
+    some_implies_match P r__remainder r__out /\ none_implies_nomatch P r__remainder r__out /\ 
       blame_remainder P r__remainder r__out.
 
   Lemma NoPegEmp' : forall p l o, PegMatch p l o -> l <> [].
@@ -3093,15 +3092,41 @@ Section PegReg.
       }
     }
     {
-      intros r.
-      repeat split.
+      assert (forall r, some_implies_match (PossesiveStar P) r (PEGREG (PossesiveStar P) r)) as HSM.
       {
+        intros r'.
         unfold some_implies_match.
         intros l1 l2 l3 prf suf m Heql3 mr.
         apply StarImpliesRemainderFail in m as HCF.
         eapply SomeImpliesMatchStarStrong; try eauto.
         rewrite <- Heql3. reflexivity.
       }
+      assert (forall r, blame_remainder (PossesiveStar P) r (PEGREG (PossesiveStar P) r)) as HBM.
+      {
+        intros r l1 l2 l3 prf suf HMatch.
+        admit.
+      }
+      intros r.
+      repeat split.
+      eapply HSM.
+      {
+        intros l1 Hdnm.
+        destruct l1 eqn:Heql1.
+        {
+          simpl.
+          constructor.
+          intros l1' l1'' H'.
+          symmetry in H'.
+          eapply catnil in H' as Hcnl.
+          subst l1'. simpl in H'. subst l1''.
+          right. split.
+          { constructor. exists []; split; eauto. }
+          { constructor. }
+        }
+        unfold DoesNotMatch in Hdnm.
+      }
+      eapply HBM.
+      assert (blame_remainder (PossesiveStar P) r (PEGREG (PossesiveStar P) r)) as HBL.
       {
         unfold none_implies_nomatch.
         intros l1 H.
