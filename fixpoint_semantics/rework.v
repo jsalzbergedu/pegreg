@@ -5,6 +5,29 @@ From mathcomp Require Import fintype.
 Require Import Basics.
 Require Import Lia.
 
+Section Tclose.
+  Context {T : Type}.
+  Context (R : T -> T -> Prop).
+  Inductive TransitiveClosure : T -> T -> Prop :=
+  | ClosureBase : forall t1 t2 : T, R t1 t2 -> TransitiveClosure t1 t2
+  | ClosureRec : forall t1 t2 t3, TransitiveClosure t1 t2 -> R t2 t3 -> TransitiveClosure t1 t3.
+
+  Lemma CloseCompose : forall t1 t2 t3, TransitiveClosure t1 t2 -> TransitiveClosure t2 t3 -> TransitiveClosure t1 t3.
+    intros t1 t2 t3 r1 r2.
+    revert r1. generalize dependent t1.
+    induction r2.
+    {
+      intros t0 r.
+      eauto using TransitiveClosure.
+    }
+    {
+      intros t0 r.
+      assert (TransitiveClosure t0 t2) by eauto.
+      eauto using TransitiveClosure.
+    }
+  Qed.
+End Tclose.
+
 Axiom lem : forall P : Prop, P \/ ~P.
 
 Lemma dn : forall P, ~ ~ P -> P.
@@ -2992,6 +3015,371 @@ Section PegReg.
   Qed.
 
   Context (reg_total : forall r l, RegMatch r l true \/ RegMatch r l false).
+
+
+  Inductive PegI :=
+  | IChar (c : Σ)
+  | IConcat (p1 p2 : PegI)
+  | IConcatR (p2 : PegI)
+  | IChoose (p1 p2 : PegI)
+  | IChooseR (p2 : PegI)
+  | IStar (p1 : PegI)
+  | IReturn.
+
+  Fixpoint PegTranslate (p : PEG) :=
+    match p with
+    | Char c => IChar c
+    | Concat p1 p2 => IConcat (PegTranslate p1) (PegTranslate p2)
+    | OrderedChoice p1 p2 => IChoose (PegTranslate p1) (PegTranslate p2)
+    | PossesiveStar p1 => IStar (PegTranslate p1)
+    end.
+
+  (* Add PegMatch', intending to be plotkin style frame semantics *)
+  Inductive PegMatch' : list (PegI * option (list Σ * list Σ)) ->
+                        list (PegI * option (list Σ * list Σ)) -> Prop :=
+  | PopCharS : forall c l1 l2 t, PegMatch'
+                              ((IChar c, Some (l1, c :: l2)) :: t)
+                              ((IReturn, Some (l1 ++ [c], l2)) :: t)
+  | PopCharF : forall c1 c2 l1 l2 t, eq_dec c1 c2 = false ->
+                                PegMatch'
+                                  ((IChar c1, Some (l1, c2 :: l2)) :: t)
+                                  ((IReturn, None) :: t)
+  | CallCatL : forall p1 p2 l1 l2 t, PegMatch'
+                                  ((IConcat p1 p2, Some (l1, l2)) :: t)
+                                  ((p1, Some (l1, l2)) :: (IConcatR p2, None) :: t)
+  | RetFailCatL : forall p2 t, PegMatch'
+                              ((IReturn, None) :: (IConcatR p2, None) :: t)
+                              ((IReturn, None) :: t)
+  | CallCatR : forall p2 l1 l2 t, PegMatch'
+                                 ((IReturn, Some (l1, l2)) :: (IConcatR p2, None) :: t)
+                                 ((p2, Some (l1, l2)) :: t)
+  | CallChoiceL : forall p1 p2 l1 l2 t, PegMatch'
+                                     ((IChoose p1 p2, Some (l1, l2)) :: t)
+                                     ((p1, Some (l1, l2)) :: (IChooseR p2, Some (l1, l2)) :: t)
+  | RetChoiceLF : forall p2 o t, PegMatch'
+                                       ((IReturn, None) :: (IChooseR p2, o) :: t)
+                                       ((p2, o) :: t)
+  | RetChoiceLS : forall p2 l1 l2 o t, PegMatch'
+                                       ((IReturn, Some (l1, l2)) :: (IChooseR p2, o) :: t)
+                                       ((IReturn, Some (l1, l2)) :: t)
+  | CallStarSubterm : forall p1 l1 l2 t, PegMatch'
+                                      ((IStar p1, (Some (l1, l2))) :: t)
+                                      ((p1, (Some (l1, l2))) :: (IStar p1, (Some (l1, l2))) :: t)
+  | RetStarSubtermS : forall p1 l1 l2 o t, PegMatch'
+                                        ((IReturn, (Some (l1, l2))) :: (IStar p1, o) :: t)
+                                       ((IStar p1, (Some (l1, l2))) :: t)
+  | RetStarSubtermF : forall p1 o t, PegMatch'
+                                  ((IReturn, None) :: (IStar p1, o) :: t)
+                                  ((IReturn, o) :: t).
+
+  Definition finally_eq (p : PEG) (i : PegI) :=
+    (forall t l1 l2 l3, PegMatch p l1 (Some (l2, l3)) -> forall l',
+          (TransitiveClosure PegMatch') ((i, Some (l', l1)) :: t) ((IReturn, (Some (l' ++ l2, l3))) :: t)) /\
+    (forall t l, PegMatch p l None -> forall l',
+          (TransitiveClosure PegMatch') ((i, Some (l', l)) :: t) ((IReturn, None) :: t)).
+
+  (*
+   * I guess we can characterize all of the terminating as follows:
+   * 1) Matches the stuff of the peg, if any
+   * 2) Returns, calling p again
+   * 3) Eventually reaches none
+   * 4) Finishes
+   *)
+
+  (* Tomorrow write that out as a nice definition. *)
+  Lemma finally_eq_peg : forall p l o, PegMatch p l o ->
+                                  forall p', p = PossesiveStar p' ->
+                                        forall l2 l3, o = Some (l2, l3) ->
+                                                 finally_eq p' (PegTranslate p') ->
+                                                 forall l' t,
+                                                   (TransitiveClosure PegMatch')
+                                                     (((PegTranslate p), Some (l', l)) :: t)
+                                                     ((IReturn, Some (l' ++ l2, l3)) :: t).
+    intros p l o m.
+    induction m; try discriminate.
+    {
+      intros p' Heqp' l1 l2 Heqo HFinally l' t.
+      inversion Heqo. inversion Heqp'. subst. rewrite app_nil_r. simpl.
+      assert (PegMatch'
+                ((IStar (PegTranslate p'), Some (l', l2)) :: t)
+                (((PegTranslate p'), Some (l', l2)) :: (IStar (PegTranslate p'), Some (l', l2)) :: t)
+             ) by eauto using PegMatch'.
+      eapply ClosureBase in H.
+      assert ((TransitiveClosure PegMatch')
+                (((PegTranslate p'), Some (l', l2)) :: (IStar (PegTranslate p'), Some (l', l2)) :: t)
+                ((IReturn, None) :: (IStar (PegTranslate p'), Some (l', l2)) :: t)
+             ) by (eapply HFinally; eassumption).
+      assert (PegMatch'
+                ((IReturn, None) :: (IStar (PegTranslate p'), Some (l', l2)) :: t)
+                ((IReturn, Some (l', l2)) :: t)
+             ) by eauto using PegMatch'.
+      eapply ClosureBase in H1.
+      eauto using CloseCompose.
+    }
+    {
+      intros p' Heqp' l5 l6 Heqo HFinally l' t.
+      inversion Heqo. inversion Heqp'. subst. simpl in * |- *.
+      assert (
+         TransitiveClosure PegMatch'
+           ((IStar (PegTranslate p'), Some ((l' ++ l1), l2)) :: t)
+           ((IReturn, Some ((l' ++ l1) ++ l3, l6)) :: t)
+        ) by eauto.
+      rewrite <- app_assoc in H.
+      eapply CloseCompose. 2: exact H.
+      assert (PegMatch'
+                ((IStar (PegTranslate p'), Some (l', l0)) :: t)
+                ((PegTranslate p', Some (l', l0)) :: (IStar (PegTranslate p'), Some (l', l0)) :: t)
+             ) by eauto using PegMatch'.
+      eapply ClosureBase in H0.
+      assert ((TransitiveClosure PegMatch')
+                ((PegTranslate p', Some (l', l0)) :: (IStar (PegTranslate p'), Some (l', l0)) :: t)
+                ((IReturn, Some (l' ++ l1, l2)) :: (IStar (PegTranslate p'), Some (l', l0)) :: t)
+             ) by (eapply HFinally; eassumption).
+      assert (PegMatch'
+                ((IReturn, Some (l' ++ l1, l2)) :: (IStar (PegTranslate p'), Some (l', l0)) :: t)
+                ((IStar (PegTranslate p'), Some (l' ++ l1, l2)) :: t)
+             ) by eauto using PegMatch'.
+      eapply ClosureBase in H2.
+      eauto using CloseCompose.
+    }
+  Qed.
+
+  Lemma SmallstepSimulBigstep : forall p, finally_eq p (PegTranslate p).
+    intros p.
+    induction p.
+    {
+      split.
+      {
+        intros t l1 l2 l3 m l4.
+        inversion m. subst. eauto using ClosureBase, PopCharS.
+      }
+      {
+        intros t l m l'.
+        destruct l eqn:eqnl.
+        { exfalso. eapply NoPegEmp; eassumption. }
+        inversion m. subst.
+        eauto using ClosureBase, PopCharF.
+      }
+    }
+    {
+      simpl.
+      split.
+      {
+        intros t l1 l2 l3 m l4.
+        inversion m. subst.
+        assert (PegMatch'
+                  ((IConcat (PegTranslate p1) (PegTranslate p2), (Some (l4, l1))) :: t)
+                  (((PegTranslate p1), Some (l4, l1)) :: (IConcatR (PegTranslate p2), None) :: t)
+               ) by eapply CallCatL.
+        apply ClosureBase in H.
+        assert (TransitiveClosure PegMatch'
+                  (((PegTranslate p1), Some (l4, l1)) :: (IConcatR (PegTranslate p2), None) :: t)
+                 ((IReturn, Some (l4 ++ l5, l6)) :: (IConcatR (PegTranslate p2), None) :: t)
+               ) by (eapply IHp1; eassumption).
+        assert (PegMatch'
+                  ((IReturn, Some (l4 ++ l5, l6)) :: (IConcatR (PegTranslate p2), None) :: t)
+                  ((PegTranslate p2, (Some (l4 ++ l5, l6))) :: t)
+               ) by eauto using PegMatch'.
+        assert ((TransitiveClosure PegMatch')
+                  (((PegTranslate p2), Some (l4 ++ l5, l6)) :: t)
+                  ((IReturn, Some ((l4 ++ l5) ++ l7, l3)) :: t)
+               ) by (eapply IHp2; eassumption).
+        rewrite <- app_assoc in H2.
+        apply ClosureBase in H1.
+        eauto using CloseCompose.
+      }
+      {
+        intros t l m l'.
+        inversion m.
+        {
+          subst.
+          assert (PegMatch'
+                    ((IConcat (PegTranslate p1) (PegTranslate p2), (Some (l', l))) :: t)
+                    (((PegTranslate p1), Some (l', l)) :: (IConcatR (PegTranslate p2), None) :: t)
+                 ) by eapply CallCatL.
+          apply ClosureBase in H.
+          assert ((TransitiveClosure PegMatch')
+                    ((PegTranslate p1, Some (l', l)) :: (IConcatR (PegTranslate p2), None) :: t)
+                    ((IReturn, None) :: (IConcatR (PegTranslate p2), None) :: t)
+                 ) by (eapply IHp1; eassumption).
+          assert (PegMatch'
+                    (((IReturn, None) :: (IConcatR (PegTranslate p2), None) :: t))
+                    (((IReturn, None) :: t))
+                 ) by eapply RetFailCatL.
+          apply ClosureBase in H1.
+          eauto using CloseCompose.
+        }
+        {
+          subst.
+          assert (PegMatch'
+                    ((IConcat (PegTranslate p1) (PegTranslate p2), (Some (l', l))) :: t)
+                    (((PegTranslate p1), Some (l', l)) :: (IConcatR (PegTranslate p2), None) :: t)
+                 ) by eapply CallCatL.
+          apply ClosureBase in H.
+          assert (TransitiveClosure PegMatch'
+                    (((PegTranslate p1), Some (l', l)) :: (IConcatR (PegTranslate p2), None) :: t)
+                    ((IReturn, Some (l' ++ l1, l2)) :: (IConcatR (PegTranslate p2), None) :: t)
+                 ) by (eapply IHp1; eassumption).
+        assert (PegMatch'
+                  ((IReturn, Some (l' ++ l1, l2)) :: (IConcatR (PegTranslate p2), None) :: t)
+                  ((PegTranslate p2, (Some (l' ++ l1, l2))) :: t)
+               ) by eauto using PegMatch'.
+        apply ClosureBase in H2.
+        assert ((TransitiveClosure PegMatch')
+                  ((PegTranslate p2, (Some (l' ++ l1, l2))) :: t)
+                  ((IReturn, None) :: t)
+               ) by (eapply IHp2; eassumption).
+        eauto using CloseCompose.
+        }
+      }
+    }
+    {
+      split.
+      {
+        eauto using finally_eq_peg.
+      }
+      {
+        intros t l m l'.
+        inversion m.
+      }
+    }
+    {
+      split.
+      {
+        intros t l1 l2 l3 m l4.
+        simpl.
+        inversion m.
+        {
+          subst.
+          Print PegMatch'.
+          assert (PegMatch'
+                    ((IChoose (PegTranslate p1) (PegTranslate p2),
+                       Some (l4, l1)) :: t)
+                    (((PegTranslate p1),
+                       Some (l4, l1)) ::
+                      (IChooseR (PegTranslate p2),
+                        Some (l4, l1)) :: t)) by eauto using PegMatch'.
+          eapply ClosureBase in H.
+          assert ((TransitiveClosure PegMatch')
+                    (((PegTranslate p1),
+                       Some (l4, l1)) ::
+                      (IChooseR (PegTranslate p2),
+                        Some (l4, l1)) :: t)
+                    ((IReturn,
+                       Some (l4 ++ l2, l3)) ::
+                      (IChooseR (PegTranslate p2),
+                        Some (l4, l1)) :: t)) by (eapply IHp1; eassumption).
+          assert (PegMatch'
+                    ((IReturn,
+                       Some (l4 ++ l2, l3)) ::
+                       (IChooseR (PegTranslate p2),
+                         Some (l4, l1)) :: t)
+                    ((IReturn,
+                       Some (l4 ++ l2, l3)) :: t)) by eauto using PegMatch'.
+          eapply ClosureBase in H1.
+          eauto using CloseCompose.
+        }
+        {
+          subst.
+          assert (PegMatch'
+                    ((IChoose (PegTranslate p1) (PegTranslate p2),
+                       Some (l4, l1)) :: t)
+                    (((PegTranslate p1),
+                       Some (l4, l1)) ::
+                      (IChooseR (PegTranslate p2),
+                        Some (l4, l1)) :: t)) by eauto using PegMatch'.
+          eapply ClosureBase in H.
+          assert ((TransitiveClosure PegMatch')
+                    (((PegTranslate p1),
+                       Some (l4, l1)) ::
+                      (IChooseR (PegTranslate p2),
+                        Some (l4, l1)) :: t)
+                    ((IReturn,
+                       None) ::
+                      (IChooseR (PegTranslate p2),
+                        Some (l4, l1)) :: t)) by (eapply IHp1; eassumption).
+          assert (PegMatch'
+                    ((IReturn, None) ::
+                       (IChooseR (PegTranslate p2),
+                         Some (l4, l1)) :: t)
+                    (((PegTranslate p2),
+                       Some (l4, l1)) :: t)) by eauto using PegMatch'.
+          eapply ClosureBase in H1.
+          assert ((TransitiveClosure PegMatch')
+                    (((PegTranslate p2),
+                       Some (l4, l1)) :: t)
+                    ((IReturn, (Some (l4 ++ l2, l3))) :: t)
+                 ) by (eapply IHp2; eassumption).
+          eauto using CloseCompose.
+        }
+      }
+      {
+        intros t l m l'.
+        inversion m.
+        subst.
+        assert (PegMatch'
+                  ((IChoose (PegTranslate p1) (PegTranslate p2),
+                     Some (l', l)) :: t)
+                  (((PegTranslate p1),
+                     Some (l', l)) ::
+                     (IChooseR (PegTranslate p2),
+                       Some (l', l)) :: t)) by eauto using PegMatch'.
+        eapply ClosureBase in H.
+        assert ((TransitiveClosure PegMatch')
+                  (((PegTranslate p1),
+                     Some (l', l)) ::
+                     (IChooseR (PegTranslate p2),
+                       Some (l', l)) :: t)
+                  ((IReturn,
+                     None) ::
+                     (IChooseR (PegTranslate p2),
+                       Some (l', l)) :: t)) by (eapply IHp1; eassumption).
+        assert (PegMatch'
+                  ((IReturn, None) ::
+                     (IChooseR (PegTranslate p2),
+                       Some (l', l)) :: t)
+                  (((PegTranslate p2),
+                     Some (l', l)) :: t)) by eauto using PegMatch'.
+        eapply ClosureBase in H2.
+        assert ((TransitiveClosure PegMatch')
+                  (((PegTranslate p2),
+                     Some (l', l)) :: t)
+                  ((IReturn, None) :: t)
+               ) by (eapply IHp2; eassumption).
+        eauto using CloseCompose.
+      }
+    }
+  Qed.
+
+  (*
+    Now of course we want to prove the following lemma:
+    PegMatch p l1 (Some (l2, l3)) -> PegMatch'* [(PegTranslate p, l1)] [(IReturn, Some (l2, l3))]
+    PegMatch p l1 None -> PegMatch'* [(PegTranslate p, l1)] [(IReturn, None)]
+    Otherwise, & when ** and match all chars is prohibited: witness of partial match! such that for all r, (pegreg p r) otherwise does not match.
+   *)
+
+  Function PegMatch' (p : PEG) (prf : list Σ) (suf : list Σ) :=
+    (
+      match p with
+      | Char c => (match (prf ++ suf) with | h :: t => if eq_dec c h then Matches (h, t) else Fails | [] => Indeterminate)
+      | Concat p1 p2 => (match PegMatch' p1 prf suf with
+                        | Matches (l1, l2) =>
+                            (match PegMatch' p2 [] l2 with
+                             | Matches (l3, l4) => (l1 ++ l2, l4)
+                             | Fails => Fails
+                             | Indeterminate => Indeterminate)
+                        | Fails => Fails
+                        | Indeterminate => Indeterminate)
+      | OrderedChoice p1 p2 =>
+          (match PegMatch' p1 prf suf with
+           | Matches (l1, l2) => Matches (l1, l2)
+           | Fails => PegMatch' p2 prf suf
+           | Indeterminate => Indeterminate)
+      | PossesiveStar p1 =>
+          (match PegMatch' p1 prf suf with
+           | Matches (l1, l2) => PegMatch p 
+          )
+
 
   Theorem pegreg_correct : forall P r, LR P r (PEGREG P r). intros P.
     induction P.
