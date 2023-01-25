@@ -26,7 +26,53 @@ Section Tclose.
       eauto using TransitiveClosure.
     }
   Qed.
+
+  Inductive TransitiveReflexiveClosure : T -> T -> Prop :=
+  | ReflexiveBase1 : forall t, TransitiveReflexiveClosure t t
+  | ReflexiveBase2 : forall t1 t2, R t1 t2 -> TransitiveReflexiveClosure t1 t2
+  | ReflexiveRec : forall t1 t2 t3, TransitiveReflexiveClosure t1 t2 ->
+                              TransitiveReflexiveClosure t2 t3 ->
+                              TransitiveReflexiveClosure t1 t3.
+
+  Lemma TR_in_TRC : forall t1 t2, TransitiveClosure t1 t2 -> TransitiveReflexiveClosure t1 t2.
+    intros t1 t2 H.
+    induction H; try eauto using TransitiveReflexiveClosure.
+  Qed.
+
+  Inductive TransitiveReflexiveClosure' : T -> T -> Prop :=
+  | ReflexiveBase' : forall t, TransitiveReflexiveClosure' t t
+  | ReflexiveRec' : forall t1 t2, TransitiveClosure t1 t2 -> TransitiveReflexiveClosure' t1 t2.
+
+  Lemma TRCCompose : forall t1 t2 t3, TransitiveReflexiveClosure t1 t2 -> TransitiveReflexiveClosure t2 t3 -> TransitiveReflexiveClosure t1 t3.
+    intros t1 t2 t3 r1.
+    induction r1; try eauto.
+    intros r2. induction r2; try eauto using TransitiveReflexiveClosure.
+  Qed.
+
+  Lemma TRCCompose' : forall t1 t2 t3, TransitiveReflexiveClosure' t1 t2 -> TransitiveReflexiveClosure' t2 t3 -> TransitiveReflexiveClosure' t1 t3.
+    intros t1 t2 t3 r1 r2.
+    inversion r1; try auto. subst.
+    inversion r2; try (subst; auto).
+    eauto using CloseCompose, TransitiveReflexiveClosure'.
+  Qed.
+
+  Lemma TRCConv : forall t1 t2, TransitiveReflexiveClosure t1 t2 ->
+                           TransitiveReflexiveClosure' t1 t2.
+    intros t1 t2 HTrc.
+    induction HTrc; try eauto using TransitiveReflexiveClosure', TransitiveClosure, CloseCompose.
+    inversion IHHTrc1; try (subst; easy).
+    inversion IHHTrc2; try (subst; easy).
+    subst.
+    eauto using CloseCompose, TransitiveReflexiveClosure'.
+  Qed.
+
+  Lemma TRCConv' : forall t1 t2, TransitiveReflexiveClosure' t1 t2 ->
+                           TransitiveReflexiveClosure t1 t2.
+    intros t1 t2 HTrc.
+    inversion HTrc; try (subst; eauto using TransitiveReflexiveClosure, TR_in_TRC).
+  Qed.
 End Tclose.
+
 
 Axiom lem : forall P : Prop, P \/ ~P.
 
@@ -3026,6 +3072,18 @@ Section PegReg.
   | IStar (p1 : PegI)
   | IReturn.
 
+  Inductive ReturnFreePegI : PegI -> Prop :=
+  | Rfic : forall c, ReturnFreePegI (IChar c)
+  | RfConcat : forall p1 p2, ReturnFreePegI p1 -> ReturnFreePegI p2 -> ReturnFreePegI (IConcat p1 p2)
+  | RfConcatR : forall p2, ReturnFreePegI p2 -> ReturnFreePegI (IConcatR p2)
+  | RfChoose : forall p1 p2, ReturnFreePegI p1 -> ReturnFreePegI p2 -> ReturnFreePegI (IChoose p1 p2)
+  | RfChooseR : forall p2, ReturnFreePegI p2 -> ReturnFreePegI (IChooseR p2)
+  | RfStar : forall p1, ReturnFreePegI p1 -> ReturnFreePegI (IStar p1).
+
+  Inductive WellFormedPegI : PegI -> Prop :=
+  | WellFormedRF : forall p, ReturnFreePegI p -> WellFormedPegI p
+  | WellFormedReturn : WellFormedPegI IReturn.
+
   Fixpoint PegTranslate (p : PEG) :=
     match p with
     | Char c => IChar c
@@ -3071,6 +3129,87 @@ Section PegReg.
   | RetStarSubtermF : forall p1 o t, PegMatch'
                                   ((IReturn, None) :: (IStar p1, o) :: t)
                                   ((IReturn, o) :: t).
+
+  Notation WFState s := (Forall (fun x => WellFormedPegI (fst x)) s).
+
+  Lemma PegMatch'PreservesWF : forall s1 s2, WFState s1 ->
+                                        PegMatch' s1 s2 ->
+                                        WFState s2.
+    intros s1 s2 HAll m.
+    destruct s1 eqn:Heqs1. try (exfalso; inversion m).
+    inversion HAll.
+    subst.
+    inversion m; try eauto using Forall, WellFormedPegI.
+    {
+      subst. simpl in H1. inversion H1. subst. inversion H. subst.
+      constructor; eauto using WellFormedPegI.
+      constructor; eauto using WellFormedPegI.
+      simpl. constructor. now constructor.
+    }
+    {
+      constructor. { simpl. eauto using WellFormedPegI. } { subst. inversion H2. subst. eassumption. }
+    }
+    {
+      subst. inversion H2. subst. simpl in H3. inversion H3. subst. inversion H. subst.
+      constructor. { simpl. eauto using WellFormedPegI. } { eassumption. }
+    }
+    {
+      subst. inversion H1. subst. inversion H. subst.
+      constructor. { simpl. eauto using WellFormedPegI. } { constructor; simpl; try eauto using WellFormedPegI, ReturnFreePegI.  }
+    }
+    {
+      subst. inversion H2. subst. simpl in H3. inversion H3. subst. inversion H. subst.
+      constructor; simpl; eauto using WellFormedPegI, ReturnFreePegI.
+    }
+    {
+      subst. inversion H2. subst.
+      constructor; simpl; eauto using WellFormedPegI.
+    }
+    {
+      subst. inversion H1. subst. simpl in H. inversion H. subst.
+      constructor; eauto using WellFormedPegI, ReturnFreePegI.
+    }
+    {
+      subst. inversion H2. subst. simpl in H3. inversion H3. subst.
+      constructor; eauto using WellFormedPegI, ReturnFreePegI.
+    }
+    {
+      subst. inversion H2. subst. simpl in H3. inversion H3. subst.
+      constructor; eauto using WellFormedPegI, ReturnFreePegI.
+    }
+  Qed.
+
+  Lemma TCPegMatch'PreservesWF : forall s1 s2, (TransitiveClosure PegMatch') s1 s2 ->
+                                          Forall (fun x => WellFormedPegI (fst x)) s1 ->
+                                          Forall (fun x => WellFormedPegI (fst x)) s2.
+    intros s1 s2 m.
+    induction m.
+    {
+      eauto using PegMatch'PreservesWF.
+    }
+    {
+      intros s1.
+      assert (
+        Forall
+          (fun x : PegI * option (list Σ * list Σ) =>
+             WellFormedPegI (fst x)) t2) by eauto.
+      eauto using PegMatch'PreservesWF.
+    }
+  Qed.
+
+  Lemma TRCPegMatch'PreservesWF : forall s1 s2, (TransitiveReflexiveClosure PegMatch') s1 s2 ->
+                                          WFState s1 ->
+                                          WFState s2.
+    intros s1 s2 m.
+    apply TRCConv in m.
+    inversion m; try easy. subst.
+    eauto using TCPegMatch'PreservesWF.
+  Qed.
+
+  Lemma PegTranslateWellFormed : forall p, ReturnFreePegI (PegTranslate p).
+    intros p.
+    induction p; eauto using ReturnFreePegI.
+  Qed.
 
   Definition finally_eq (p : PEG) (i : PegI) :=
     (forall t l1 l2 l3, PegMatch p l1 (Some (l2, l3)) -> forall l',
@@ -3351,6 +3490,178 @@ Section PegReg.
     }
   Qed.
 
+  (*
+   * The stack machine Refines the PEG spec if:
+   * you observe the initial instruction, along with the tail of the stack, as In
+   * you observe the _FIRST_ return from this initial instruction, along with the tail of the stack, as Out
+   * You relate that to the PegMatch instr.
+   *)
+  (*
+   * It may be that this first criteria is already met right?
+   * If you do a choice, e.g. "c"/"c", that changes the tail for the second call.
+   * If you do a star, it also changes the tail for the second call
+   * So s2 is already unique
+   *)
+  Definition finally_eq_inv (p : PEG) (i : PegI) :=
+    (forall s1 s2, ((TransitiveClosure PegMatch') s1 s2) ->
+              WFState s1 -> WFState s2 ->
+              (* Observational equivalence of out and in states *)
+              forall t l1 l2 l3 l', s1 = ((i, Some (l', l1)) :: t) ->
+                               s2 = ((IReturn, (Some (l' ++ l2, l3))) :: t) ->
+                               PegMatch p l1 (Some (l2, l3))
+    )
+    /\
+    (forall s1 s2, ((TransitiveClosure PegMatch') s1 s2) -> WFState s1 -> WFState s2 ->
+               forall t l l', s1 = ((i, Some (l', l)) :: t) -> s2 = ((IReturn, None) :: t) -> PegMatch p l None
+    ).
+
+  (*
+   * The strongest property that "probably" holds looks something like an injection:
+   * for any PegMatch' starting from a state s and ending at a state s',
+   * there is exactly 1 state s_pred, s transitions to s_pred and s_pred transitions to s'.
+   * In other words, no duplicate states in the machine.
+   *)
+
+  Lemma also_impossible_listcons : forall {T}, forall l : list T, forall h1 h2,
+      l = h1 :: h2 :: l -> False.
+    intros T l.
+    induction l; try discriminate.
+    intros h1 h2 HBoth.
+    inversion HBoth.
+    eapply IHl; eassumption.
+  Qed.
+
+  Lemma also_also_impossible_listcons : forall {T}, forall l : list T, forall h1 h2 h3,
+      l = h1 :: h2 :: h3 :: l -> False.
+    intros T l.
+    induction l; try discriminate.
+    intros h1 h2 h3 Hthree.
+    inversion Hthree.
+    eapply IHl; eassumption.
+  Qed.
+
+  (* Lemma dup_impossible_case : forall s1 s2, *)
+  (*     (TransitiveClosure PegMatch') s1 s2 -> *)
+  (*     WFState s1 -> WFState s2 -> *)
+  (*     forall o c l1 l2 t p2, s1 = ((IChar c, Some (l1, c :: l2)) :: t) -> *)
+  (*                       s2 = ((IReturn, Some (l1 ++ [c], l2)) :: (IChooseR p2, o) :: t) -> False. *)
+  (*   intros. subst. *)
+
+  Lemma nostutter : forall s, PegMatch' s s -> False.
+    intros s.
+    destruct s eqn:eqs.
+    {
+      intros H. inversion H.
+    }
+    {
+      intros H.
+      inversion H; try eauto using impossible_listcons.
+    }
+  Qed.
+  Lemma PegMatch'_nodup :
+    forall s s', (TransitiveClosure PegMatch') s s' -> WFState s ->
+            exists s__pred, (((TransitiveReflexiveClosure PegMatch') s s__pred) /\
+                        ((TransitiveClosure PegMatch') s__pred s')) /\
+    (forall s__pred', (((TransitiveReflexiveClosure PegMatch') s s__pred') /\
+                        ((TransitiveClosure PegMatch') s__pred' s')) -> s__pred' = s__pred).
+    intros s s' m.
+    induction m.
+    {
+      intros HWF.
+      exists t1. repeat split; try eauto using ReflexiveBase1, ClosureBase.
+      intros s__pred'.
+      intros H'. inversion H'.
+    }
+    {
+      destruct H.
+      {
+        exists ((IChar c, Some (l1, c :: l2)) :: t). split; try (left; reflexivity); split; try eauto using PegMatch'.
+        intros s__pred'. intros H'.
+        inversion H'. { intros H''. symmetry; assumption. }
+        intros Hother.
+        inversion Hother.
+        {
+          subst. apply app_inj_tail in H4. inversion H4. subst. reflexivity.
+        }
+        {
+          subst. inversion H'. { inversion H2. }
+          {
+            assert (WFState
+                      ((IConcat IReturn p2, Some (l1 ++ [c], l2))
+                         :: t0)) by eauto using TCPegMatch'PreservesWF.
+            inversion H3. subst. simpl in H6. inversion H6.
+            subst. inversion H4. subst. inversion H9.
+          }
+        }
+        {
+          subst.
+          inversion H'. { inversion H2. }
+          {
+            assert (WFState
+                      ((IReturn, Some (l1 ++ [c], l2)) :: (IConcatR IReturn, None) :: t)
+                         ) by eauto using TCPegMatch'PreservesWF.
+            inversion H3. subst. simpl in H7. inversion H7.
+            subst. simpl in H8. inversion H8. inversion H4. inversion H11.
+          }
+        }
+        {
+          subst.
+          inversion H'. { inversion H2. }
+          assert (
+              WFState ((IChoose IReturn p2, Some (l1 ++ [c], l2)) :: t0)
+            ) by eauto using TCPegMatch'PreservesWF.
+          inversion H3. subst. simpl in H6. inversion H6. subst. inversion H4. subst. inversion H9.
+        }
+        {
+          subst.
+          inversion H'. { inversion H2. }
+          assert (
+              WFState ((IReturn, None) :: (IChooseR IReturn, Some (l1 ++ [c], l2)) :: t)
+            ) by eauto using TCPegMatch'PreservesWF.
+          inversion H3. subst. inversion H7. subst. simpl in H8. inversion H8. inversion H4. inversion H11.
+        }
+        {
+          subst.
+          inversion H'. { inversion H2. }
+          inversion H2.
+          { subst. inversion H3. subst. eapply impossible_listcons in H10. contradiction. }
+          {
+            inversion Hother. subst.
+            subst.
+            inversion H4.
+            {
+              subst. apply app_inj_tail in H7. inversion H7. subst.
+            }
+          }
+        }
+      }
+    }
+
+  Lemma BigStepSimulSmalStep : forall p, finally_eq_inv p (PegTranslate p).
+    intros p.
+    induction p.
+    {
+      split.
+      {
+        Check (PopCharS c _ _ _).
+        intros s1 s2 m.
+        intros t l1 l2 l3 l' Heqt1 Heqt2. subst.
+        assert (m = ClosureBase PegMatch' _ _ (PopCharS c _ _ _)).
+        subst.
+        
+        induction m.
+        {
+          intros t l1 l2 l3 l' Heqt1 Heqt2.
+          subst. inversion H. subst. apply taileq in H5 as Hl2eq. subst.
+          constructor.
+        }
+        {
+          intros t l1 l2 l3 l' Heqt1 Heqt2.
+          subst.
+          eapply IHm with (t := t). { reflexivity. } { }
+        }
+      }
+    }
   (*
     Now of course we want to prove the following lemma:
     PegMatch p l1 (Some (l2, l3)) -> PegMatch'* [(PegTranslate p, l1)] [(IReturn, Some (l2, l3))]
