@@ -3549,6 +3549,21 @@ Section PegReg.
     intros. inversion H. eapply IHl1; eauto.
   Qed.
 
+  (*
+   * I don't think I'll be able to prove frame invariance; in fact, with this strict definition,
+   * it's not even true.
+   * So here are some other possibilities:
+   * - [ ] Add a terminating character.
+   * - [ ] Add a recursive characterization with all prefixes and show it implies the forall prf ++ suf
+   * definition.
+   * Rework the definitions to have the (r - (prefixes excluding [] of p)emp) (for choice)
+   * and (r - p*(prefixes excluding [] of p)emp) (for star)
+   * & rework the logical relation for this.
+   * - [ ] Show that, in the case of peg stall, the remainder matcher will not match
+   * (basically, show that pegstalls correspond to prefix-emps.
+   *  So we go from Some x, None to Some x, None, pegstall corresponding to prefixemp)
+   *)
+
   Lemma PegMatch'FrameInvariant : frame_invariant PegMatch'.
     unfold frame_invariant.
     {
