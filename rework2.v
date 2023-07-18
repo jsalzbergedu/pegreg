@@ -29,7 +29,6 @@ Section PegReg.
 
   Definition DoesNotMatch (P : PEG) (l : list Σ) := (forall l1 l2, PegMatch P l (Some (l1, l2)) -> False).
 
-
   Definition PPartial (p : PEG) := forall l o, PegMatch p l o -> forall o', PegMatch p l o' -> o = o'.
 
   Lemma PPartialStar : forall p l o, PegMatch p l o -> forall p', p = PossesiveStar p' -> PPartial p' -> forall o', PegMatch p l o' -> o = o'.
@@ -242,7 +241,7 @@ Section PegReg.
     forall l1 l2 l3 prf suf, PegMatch P l1 (Some (l2, l3)) -> prf ++ suf = l3 -> RegMatch r__remainder prf true -> RegMatch r__out (l2 ++ prf) true.
 
   Definition none_implies_nomatch (P : PEG) (r__remainder : REG) (r__out : REG) :=
-    forall l1, DoesNotMatch P l1 -> RegMatch r__out l1 false.
+    forall l1, (forall prf suf, l1 = prf ++ suf -> DoesNotMatch P prf) -> RegMatch r__out l1 false.
 
   Definition blame_remainder (P : PEG) (r__remainder : REG) (r__out : REG) :=
     forall l1 l2, PegMatch P (l1 ++ l2) (Some (l1, l2)) ->
@@ -1134,6 +1133,10 @@ Section PegReg.
       unfold LR in H1.
       unfold StrengthenFail in H2.
       eapply H5 with (l1 := prf).
+      intros.
+      subst.
+      assert (StrengthenFail P' prf0 suf0) by eapply MatchStrengthen.
+      eapply H6.
       eassumption.
     }
     {
@@ -1210,8 +1213,9 @@ Section PegReg.
           apply eq_dec_correct in eqeqdec.
           subst.
           exfalso.
-          eapply H.
-          constructor.
+          eapply H with (prf := [σ]) (suf := l1).
+          { simpl. reflexivity. }
+          { econstructor. }
         }
         {
           constructor.
@@ -1290,14 +1294,25 @@ Section PegReg.
         assert (DoesNotMatch P1 l1 \/ exists l2 l3, PegMatch P1 l1 (Some (l2, l3))) by eapply lem_peg.
         inversion H4.
         {
-          eapply H1. eassumption.
+          eapply H1.
+          intros.
+          subst.
+          assert (StrengthenFail P1 prf suf). { eapply MatchStrengthen. }
+          eauto.
         }
         {
           inversion H5. inversion H6.
           assert (DoesNotMatch P2 x0 \/ exists l2 l3, PegMatch P2 x0 (Some (l2, l3))) by eapply lem_peg.
           inversion H8.
           {
-            assert (RegMatch (PEGREG P2 r) x0 false) by eauto.
+            assert (RegMatch (PEGREG P2 r) x0 false).
+            {
+              replace (x0) with (x0 ++ []) by eauto using app_nil_r.
+              eapply H2.
+              intros. rewrite app_nil_r in H10. subst.
+              assert (StrengthenFail P2 prf suf) by eapply MatchStrengthen.
+              eauto.
+            }
             unfold blame_remainder in HBlame.
             eapply list_split in H7 as HSplit. subst l1.
             eapply HBlame.
@@ -1307,7 +1322,9 @@ Section PegReg.
           {
             inversion H9.
             inversion H10.
-            exfalso. eauto using PegMatch.
+            exfalso. eapply H3 with (prf := l1) (suf := []).
+            rewrite app_nil_r. reflexivity.
+            eauto using PegMatch.
           }
         }
       }
@@ -1341,6 +1358,5 @@ Section PegReg.
         unfold none_implies_nomatch.
         intros.
         unfold DoesNotMatch in H.
-        simpl.
       }
     }
