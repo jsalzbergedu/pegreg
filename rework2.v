@@ -1177,6 +1177,11 @@ Section PegReg.
     }
   Qed.
 
+  (*
+   * Well, I've hit a wall.
+   * I can't show that 
+   *)
+
   Lemma heregoes : forall P r__remainder, LR P r__remainder (PEGREG P r__remainder).
     intros P.
     induction P.
@@ -1358,5 +1363,13 @@ Section PegReg.
         unfold none_implies_nomatch.
         intros.
         unfold DoesNotMatch in H.
+        simpl.
+        constructor.
+        intros.
+        left.
+        assert (forall r__remainder, none_implies_nomatch P r__remainder (PEGREG P r__remainder)) by eapply IHP.
+        unfold none_implies_nomatch in H1.
+        constructor.
+
       }
     }
