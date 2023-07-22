@@ -77,9 +77,9 @@
  \mathit{PEGREG}(c, r)  =  c.r \\&
  \mathit{PEGREG}(P1.P2, r)  =  \mathit{PEGREG}(P1, \mathit{PEGREG}(P2, r)) \\&
  \mathit{PEGREG}(P1/P2, r)  =  \mathit{PEGREG}(P1, r) \cup
-  (\mathit{PEGREG(P2, r)} \cap \neg\mathit{PEGREG}(P1, \varepsilon))\\&
+  (\mathit{PEGREG(P2, r)} \cap \neg\mathit{PEGREG}(P1, .*))\\&
  \mathit{PEGREG}(P1*, r)  =  \mathit{PEGREG}(P1, \varepsilon)*.
-  (r \cap \neg\mathit{PEGREG}(P1, \varepsilon))
+  (r \cap \neg\mathit{PEGREG}(P1, .*))
 \end{alignat}
 
 \end{document}
