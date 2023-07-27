@@ -73,8 +73,8 @@
 \begin{document}
 
 \begin{alignat}{2}& \notag
- \mathit{PEGREG} : \mathit{PEG} \to \mathit{REG} \to \mathit{REG} \\&
- \mathit{PEGREG}(c, r)  =  c.r \\&
+ \mathit{PEGREG} : (\mathit{PEG} \times \mathit{REG}) \to \mathit{REG} \\&
+ \mathit{PEGREG}(c, r)  =  c \cdot r \\&
  \mathit{PEGREG}(P1 \cdot P2, r)  =  \mathit{PEGREG}(P1, \mathit{PEGREG}(P2, r)) \\&
  \mathit{PEGREG}(P1/P2, r)  =  \mathit{PEGREG}(P1, r) \cup
   (\mathit{PEGREG(P2, r)} \cap \neg\mathit{PEGREG}(P1, .*))\\&
