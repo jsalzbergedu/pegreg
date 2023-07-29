@@ -254,7 +254,7 @@ negation, and kleene star respectively.
   (\synReg \cap \funNegate(\synPeg)) \\&\notag \\&\notag
 \funNegate : \setPeg \to \setReg \\&
 \funNegate(c) = . \cap {\neg}c\\&
-\funNegate(\synPeg_1 \cdot \synPeg_2) = \funNegate(\synPeg_1) \cap \funPEGREG(\synPeg_1, \funNegate(\synPeg_2)) \\&
+\funNegate(\synPeg_1 \cdot \synPeg_2) = \funNegate(\synPeg_1) \cup \funPEGREG(\synPeg_1, \funNegate(\synPeg_2)) \\&
 \funNegate(\synPeg_1 / \synPeg_2) = \funNegate(\synPeg_1) \cap \funNegate(\synPeg_2) \\&
 \funNegate(\synPeg^*) = \bot
 \end{alignat}
