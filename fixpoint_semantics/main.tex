@@ -5,7 +5,9 @@
 \date{\today}
 \title{Potential Fixedpoint Semantics for PEGREG}
 
+\usepackage{float} % For putting figures directly after text
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage[ligature, inference]{semantic}
 \usepackage{galois}
 \newcommand{\emptytrace}{\ni}
@@ -65,21 +67,201 @@
 \newcommand{\post}{\mbox{post}}
 \newcommand{\dpost}{\widetilde{\mbox{post}}}
 \newcommand{\lfp}{{\kern-0.20em}\mathbin{\mbox{lfp}}}
+\newcommand{\synPeg}{\ensuremath{\operatorname{\tt peg}}}
+\newcommand{\synReg}{\ensuremath{\operatorname{\tt reg}}}
+\newcommand{\synRegEmp}{\ensuremath{\operatorname{\tt \varepsilon}}}
+\newcommand{\setPeg}{\mathit{Peg}}
+\newcommand{\setReg}{\mathit{Reg}}
+\newcommand{\funPEGREG}{\operatorname{\mathit{pegreg}}}
+\newcommand{\funPegMatch}{\operatorname{\mathit{pegMatch}}}
+\newcommand{\funRegMatch}{\operatorname{\mathit{regMatch}}}
+\newcommand{\funNegate}{\operatorname{\mathit{negate}}}
+\DeclareMathSymbol{\mhyphen}{\mathord}{AMSa}{"39}
 %% End book symbols
+
+%%% \begin{envBNF}{pagewidth}{caption}{label} math text \end{envBNF}
+%%% formats math text to display
+%%% meta : set ::= alt0
+%%%             |  alt1 ...
+%%%             |  altn
+%%% via tabular environment
+\NewDocumentEnvironment{envBNF}{m m m}%
+               {%
+                 \begin{figure}[H]%
+                   \centering%
+                   \begin{minipage}{#1}%
+                     \begin{tabular}{lclclcl}}%
+               {%
+                     \end{tabular}%
+                   \end{minipage}%
+                   \caption{#2}%
+                   \label{#3}%
+                 \end{figure}}
+
+% ==============================================================================
+% BNF commands
+% ~~~~~~~~~~~~
+%%% \bnfRule{meta}{set}{alt0} formats rules of the form
+%%% meta : set ::= alt0
+%%% where meta, set, and alt0 are math text.
+\newcommand{\bnfRule}[3]{$#1$ & $\in$ & $#2$ & $::=$ & $#3$ \\}
+%%% \bnfAlt{altn} formats rules of the form
+%%%            |   altn
+%%% where altn is math text.
+\newcommand{\bnfAlt}[1]{& & & | & $#1$ \\}
+% ==============================================================================
+
+\newtheorem{definition}{Definition}
+\newtheorem{proposition}{Proposition}
 
 \usepackage{tikz}
 \usepackage{fancyvrb}
 \usepackage[T1]{fontenc}
 \begin{document}
 
+\begin{definition} Strings \\
+  For a set $X$, we define strings over $X$ to be elements of
+  the free monoid over $X$, called $X^*$.
+
+  \noindent We use the notation
+  $\cdot : (\mathit{String} \times \mathit{String}) \to \mathit{String}$
+  to mean the concatenation of strings.
+\end{definition}
+
+\begin{definition} Alphabet \\
+  Let $\Sigma$ be an arbitrary, finite set.
+  This document will call $\Sigma$ the Alphabet.
+  We will let $c$ be a metavariable ranging over $\Sigma$,
+  and s be a metavariable ranging over $\Sigma^*$, ie, strings of $\Sigma$.
+\end{definition}
+
+\begin{definition} Parsing Expression Grammars \\
+  We define the set $\setPeg$ via the following bnf formula, overloading the operator
+  $\cdot$
+
+\begin{envBNF}{0.40\textwidth}{Parsing Expression Grammar Syntax}{fig:PEGSyntax}
+  \bnfRule{\synPeg}{\setPeg}{c \in \Sigma}
+  \bnfAlt{\synPeg_1 \cdot \synPeg_2}
+  \bnfAlt{\synPeg_1 / \synPeg_2}
+  \bnfAlt{\synPeg^*}
+\end{envBNF}
+
+These rules are called character, sequence, choice, and possesive star
+respectively.
+\end{definition}
+
+\begin{definition} Regular Expressions \\
+  We define the set $\setReg$ via the following bnf formula, again overloading the
+  operator $\cdot$
+
+\begin{envBNF}{0.40\textwidth}{Regular Expression Grammar Syntax}{fig:REGSyntax}
+  \bnfRule{\synReg}{\setReg}{\synRegEmp}
+  \bnfAlt{c \in \Sigma}
+  \bnfAlt{.}
+  \bnfAlt{\bot}
+  \bnfAlt{\synReg_1 \cdot \synReg_2}
+  \bnfAlt{\synReg_1 \cup \synReg_2}
+  \bnfAlt{\synReg_1 \cap \synReg_2}
+  \bnfAlt{\neg\synReg}
+  \bnfAlt{\synReg^*}
+\end{envBNF}
+
+These rules are empty, character, any, empty, sequence, union, intersection,
+negation, and kleene star respectively.
+\end{definition}
+
+\begin{definition} Parsing Expression Grammar Matching \\
+  Letting $\mathit{Matched} = \Sigma^*$ and $\mathit{Remainder} = \Sigma^*$,
+
+  \noindent We inherit the partial function
+  $\funPegMatch : (\setPeg \times \Sigma^*) \nrightarrow (\mathit{Matched} \times \mathit{Remainder}) \uplus \{\bot\}$
+
+  \noindent from the paper
+  ``Towards a Typed Semantics for Parsing Expression Grammars''.
+\end{definition}
+
+\begin{definition} Character Of \\
+  For a set $X$ with elements $x \in X$, we say that
+  $x$ is a character of the string $\mathit{xs} \in X^*$ iff
+
+  \noindent
+  $\exists (\mathit{prf}, \mathit{suf} \in X^*),
+     \mathit{xs} = \mathit{prf} \cdot x \cdot \mathit{suf}$
+
+  \noindent We use the notation $x \mathop{char{\mhyphen}of} \mathit{xs}$
+  to mean $x$ is a character of the string $xs$.
+\end{definition}
+
+\begin{definition} Regular Expression Matching \\
+  We define $\funRegMatch : (\synReg \times \Sigma^*) \to \mathbb{B}$ recursively:
+  $ \\
+  \funRegMatch(\varepsilon, \varepsilon) = \mathit{\tt t} \\
+  \funRegMatch(\varepsilon, c \cdot s) = \mathit{\tt f} \\
+  \funRegMatch(c, c) = \mathit{\tt t} \\
+  \funRegMatch(c, c') \mbox{ where } c \not= c' = \mathit{\tt f} \\
+  \funRegMatch(c, c' \cdot s) = \mathit{\tt f} \\
+  \funRegMatch(\cdot, c) = \mathit{\tt t} \\
+  \funRegMatch(\cdot, c' \cdot s) = \mathit{\tt f} \\
+  \funRegMatch(\bot, s) = \mathit{\tt f} \\
+  \funRegMatch(\synReg_1 \cdot \synReg_2, s) = \exists (s', s'' \in \Sigma^*), s = s' \cdot s'' \land
+      \funRegMatch(\synReg_1, s') \land \funRegMatch(\synReg_2, s'') \\
+  \funRegMatch(\synReg_1 \cup \synReg_2, s) = \funRegMatch(\synReg_1, s) \lor \funRegMatch(\synReg_2, s) \\
+  \funRegMatch(\synReg_1 \cap \synReg_2, s) = \funRegMatch(\synReg_1, s) \land \funRegMatch(\synReg_2, s) \\
+  \funRegMatch(\neg\synReg_1, s) = \neg\funRegMatch(\synReg_1, s)\\
+  \funRegMatch(\synReg_1^*, s) = \exists (ss \in \Sigma^{**}), \bigwedge_{s \mathop{char{\mhyphen}of} ss}
+    \funRegMatch(\synReg_1, s)\\
+  $
+
+  While most rules are self explanatory, the rule for concatenation and star
+  may not be.
+
+  Concatenation splits the string into two halves, the first of
+  which matches to the left regex, and the second to the right.
+
+  Star considers all possible splits of the string, and requires that the
+  constituent strings of the split are each matched by the subexpression.
+
+\end{definition}
+
+%%% Maybe we can still do the mutual recursion?
+
+%%% pegreg(c, reg) = c.reg
+%%% pegreg(p1.p2, reg) = pegreg(p1, pegreg(p2, reg))
+%%% pegreg(p1/p2, reg) = pegregi(p1, reg) union
+%%%                     (pegreg(p2, reg) intersection negate(p1))
+%%% pegreg(p*, reg) = pegreg(p, emp)*.(reg intersection negate(p))
+%%%
+%%% negate(c) = . intersection (!c)
+%%% negate(p1.p2) = negate(p1) union pegreg(p1, negate(p2))
+%%% negate(p1/p2) = negate(p1) intersection (negate(p2))
+%%% negate(p1*) = {}
+
+\begin{definition} Parsing Expression Grammar Translation \\
+
+  On input $(\synPeg, \synReg)$, the function $\funPEGREG$ produces a regular expression
+  with the characters consumed by $\synPeg$ removed. It is defined in mutual
+  recursion with the $\funNegate$ function, which on input $\synPeg$, generates a regular
+  expression corresponding to the set of characters that cause $\synPeg$ to match
+  $\bot$.
+
 \begin{alignat}{2}& \notag
- \mathit{PEGREG} : (\mathit{PEG} \times \mathit{REG}) \to \mathit{REG} \\&
- \mathit{PEGREG}(c, r)  =  c \cdot r \\&
- \mathit{PEGREG}(P1 \cdot P2, r)  =  \mathit{PEGREG}(P1, \mathit{PEGREG}(P2, r)) \\&
- \mathit{PEGREG}(P1/P2, r)  =  \mathit{PEGREG}(P1, r) \cup
-  (\mathit{PEGREG}(P2, r) \cap \neg\mathit{PEGREG}(P1, .*))\\&
- \mathit{PEGREG}(P1*, r)  =  \mathit{PEGREG}(P1, \varepsilon)* \cdot
-  (r \cap \neg\mathit{PEGREG}(P1, .*))
+ \funPEGREG : (\setPeg \times \setReg) \to \setReg \\&
+ \funPEGREG(c, \synReg)  =  c \cdot \synReg \\&
+ \funPEGREG(\synPeg_1 \cdot \synPeg_2, \synReg)  =  \funPEGREG(\synPeg_1, \funPEGREG(\synPeg_2, \synReg)) \\&
+ \funPEGREG(\synPeg_1/\synPeg_2, \synReg)  =  \funPEGREG(\synPeg_1, \synReg) \cup
+  (\funPEGREG(\synPeg_2, \synReg) \cap \funNegate(\synPeg_1))\\&
+ \funPEGREG(\synPeg^*, \synReg)  =  \funPEGREG(\synPeg, \varepsilon)^* \cdot
+  (\synReg \cap \funNegate(\synPeg)) \\&\notag \\&\notag
+\funNegate : \setPeg \to \setReg \\&
+\funNegate(c) = . \cap {\neg}c\\&
+\funNegate(\synPeg_1 \cdot \synPeg_2) = \funNegate(\synPeg_1) \cap \funPEGREG(\synPeg_1, \funNegate(\synPeg_2)) \\&
+\funNegate(\synPeg_1 / \synPeg_2) = \funNegate(\synPeg_1) \cap \funNegate(\synPeg_2) \\&
+\funNegate(\synPeg^*) = \bot
 \end{alignat}
+\end{definition}
+
+\begin{proposition}
+  Characterization of correspondance needs rework!
+\end{proposition}
 
 \end{document}
