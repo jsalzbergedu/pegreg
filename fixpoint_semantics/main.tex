@@ -198,6 +198,7 @@ negation, and kleene star respectively.
   \funRegMatch(\varepsilon, \varepsilon) = \mathit{\tt t} \\
   \funRegMatch(\varepsilon, c \cdot s) = \mathit{\tt f} \\
   \funRegMatch(c, c) = \mathit{\tt t} \\
+  \funRegMatch(c, \varepsilon) = \mathit{\tt f} \\
   \funRegMatch(c, c') \mbox{ where } c \not= c' = \mathit{\tt f} \\
   \funRegMatch(c, c' \cdot s) = \mathit{\tt f} \\
   \funRegMatch(\cdot, c) = \mathit{\tt t} \\
@@ -249,9 +250,9 @@ negation, and kleene star respectively.
  \funPEGREG(c, \synReg)  =  c \cdot \synReg \\&
  \funPEGREG(\synPeg_1 \cdot \synPeg_2, \synReg)  =  \funPEGREG(\synPeg_1, \funPEGREG(\synPeg_2, \synReg)) \\&
  \funPEGREG(\synPeg_1/\synPeg_2, \synReg)  =  \funPEGREG(\synPeg_1, \synReg) \cup
-  (\funPEGREG(\synPeg_2, \synReg) \cap \funNegate(\synPeg_1))\\&
+  (\funPEGREG(\synPeg_2, \synReg) \cap \funNegate(\synPeg_1) \operatorname{\cdot}.^*)\\&
  \funPEGREG(\synPeg^*, \synReg)  =  \funPEGREG(\synPeg, \varepsilon)^* \cdot
-  (\synReg \cap \funNegate(\synPeg)) \\&\notag \\&\notag
+  (\synReg \cap \funNegate(\synPeg) \operatorname{\cdot} .^*) \\&\notag \\&\notag
 \funNegate : \setPeg \to \setReg \\&
 \funNegate(c) = . \cap {\neg}c\\&
 \funNegate(\synPeg_1 \cdot \synPeg_2) = \funNegate(\synPeg_1) \cup \funPEGREG(\synPeg_1, \funNegate(\synPeg_2)) \\&
