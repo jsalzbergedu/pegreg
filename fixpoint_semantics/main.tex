@@ -5,8 +5,10 @@
 \date{\today}
 \title{Potential Fixedpoint Semantics for PEGREG}
 
+\usepackage{parskip}
 \usepackage{float} % For putting figures directly after text
 \usepackage{amsmath}
+\usepackage{amsthm}
 \usepackage{amssymb}
 \usepackage[ligature, inference]{semantic}
 \usepackage{galois}
@@ -67,15 +69,64 @@
 \newcommand{\post}{\mbox{post}}
 \newcommand{\dpost}{\widetilde{\mbox{post}}}
 \newcommand{\lfp}{{\kern-0.20em}\mathbin{\mbox{lfp}}}
-\newcommand{\synPeg}{\ensuremath{\operatorname{\tt peg}}}
-\newcommand{\synReg}{\ensuremath{\operatorname{\tt reg}}}
+\newcommand{\synPeg}{\ensuremath{\operatorname{p}}}
+\newcommand{\synReg}{\ensuremath{\operatorname{r}}}
 \newcommand{\synRegEmp}{\ensuremath{\operatorname{\tt \varepsilon}}}
+\newcommand{\metaLab}{\ensuremath{l}}
+\newcommand{\synLabCol}{\ensuremath{\operatorname{\tt lab: \mbox{ }}}}
+\newcommand{\metaMatch}{\ensuremath{\operatorname{m}}}
+\newcommand{\synEmp}[1]%
+{\ensuremath{\operatorname{\tt Emp}%
+(\operatorname{\tt lab\colon} #1, \operatorname{\tt string\colon} \varepsilon)}}
+\newcommand{\synChar}[2]%
+{\ensuremath{\operatorname{\tt Char}%
+(\operatorname{\tt lab\colon} #1, \operatorname{\tt string\colon} #2)}}
+\newcommand{\synWildcard}[2]%
+{\ensuremath{\operatorname{\tt Any}%
+(\operatorname{\tt lab\colon} #1, \operatorname{\tt string\colon} #2)}}
+\newcommand{\synSeq}[4]%
+{\ensuremath{\operatorname{\tt Seq}%
+(\operatorname{\tt lab\colon} #1, \operatorname{\tt string\colon} #2,
+  \operatorname{\tt right: } #3, \operatorname{\tt left: } #4)}}
+\newcommand{\synJoinR}[3]%
+{\ensuremath{\operatorname{\tt JoinR}%
+(\operatorname{\tt lab\colon} #1, \operatorname{\tt string\colon} #2,%
+\operatorname{\tt subexpr\colon} #3)}}
+\newcommand{\synJoinL}[3]%
+{\ensuremath{\operatorname{\tt JoinL}%
+(\operatorname{\tt lab\colon} #1, \operatorname{\tt string\colon} #2,%
+\operatorname{\tt subexpr\colon} #3)}}
+\newcommand{\synMeet}[4]%
+{\ensuremath{\operatorname{\tt Meet}%
+(\operatorname{\tt lab\colon} #1, \operatorname{\tt string\colon} #2,%
+\operatorname{\tt left\colon} #3,\operatorname{\tt right\colon} #3)}}
+\newcommand{\synNeg}[2]%
+{\ensuremath{\operatorname{\tt Neg}%
+(\operatorname{\tt lab\colon} #1, \operatorname{\tt string\colon} #2)}}
+\newcommand{\synStarBase}[1]%
+{\ensuremath{\operatorname{\tt StarBase}%
+(\operatorname{\tt lab\colon} #1)}}
+\newcommand{\synStarRec}[4]%
+{\ensuremath{\operatorname{\tt StarRec}%
+(\operatorname{\tt lab\colon} #1, \operatorname{\tt string\colon} #2,%
+\operatorname{\tt left\colon} #3, \operatorname{\tt right\colon} #4)}}
 \newcommand{\setPeg}{\mathit{Peg}}
 \newcommand{\setReg}{\mathit{Reg}}
+\newcommand{\setWF}{\mathit{WF}}
+\newcommand{\setWFTwo}{\mathit{WF2}}
+\newcommand{\setMatch}{\mathit{Match}}
+\newcommand{\setLab}{\mathit{Lab}}
+\newcommand{\setPegregLab}{\mathit{PegregLab}}
+\newcommand{\funFold}{\operatorname{\mathit{fold}}}
+\newcommand{\funLabelToExpr}{\operatorname{\mathit{labelToExpr}}}
+\newcommand{\funPow}{\operatorname{\mathit{Pow}}}
 \newcommand{\funPEGREG}{\operatorname{\mathit{pegreg}}}
 \newcommand{\funPegMatch}{\operatorname{\mathit{pegMatch}}}
 \newcommand{\funRegMatch}{\operatorname{\mathit{regMatch}}}
 \newcommand{\funNegate}{\operatorname{\mathit{negate}}}
+\newcommand{\funMatch}{\operatorname{\mathit{match}}}
+\newcommand{\funExtractPeg}{\operatorname{\mathit{extract_{peg}}}}
+\newcommand{\funExtractReg}{\operatorname{\mathit{extract_{reg}}}}
 \DeclareMathSymbol{\mhyphen}{\mathord}{AMSa}{"39}
 %% End book symbols
 
@@ -111,21 +162,36 @@
 \newcommand{\bnfAlt}[1]{& & & | & $#1$ \\}
 % ==============================================================================
 
+% Math operator
+\newcommand{\bigcdot}{\bullet}
+
 \newtheorem{definition}{Definition}
 \newtheorem{proposition}{Proposition}
 
 \usepackage{tikz}
 \usepackage{fancyvrb}
 \usepackage[T1]{fontenc}
+
 \begin{document}
+
+
 
 \begin{definition} Strings \\
   For a set $X$, we define strings over $X$ to be elements of
-  the free monoid over $X$, called $X^*$.
+  the free monoid over $X$, called $X^*$, with $\varepsilon \in X^*$ denoting the 0 element.
+  The set $X^*$ will be ranged over by the metavariable $xs$.
 
   \noindent We use the notation
-  $\cdot : (\mathit{String} \times \mathit{String}) \to \mathit{String}$
+  $\cdot : (\mathit{X^*} \times \mathit{X^*}) \to \mathit{X^*}$
   to mean the concatenation of strings.
+
+  The operator $\funFold : ((X \times A \to A) \times A \times X^*) \to A$ is defined \\
+  $\funFold(f, a, \varepsilon) = a,
+  \funFold(f, a, (x \in X) \cdot xs) = f (x, \funFold(f, a, xs))$.
+
+  Strings are equivalent to finite sequences and so will be indexed.
+  For an $i$ in $i \in \mathbb{Z}^+ \cup 0$,
+  $xs_i$ is equal to the $i$th index and is otherwise undefined.
 \end{definition}
 
 \begin{definition} Alphabet \\
@@ -136,38 +202,41 @@
 \end{definition}
 
 \begin{definition} Parsing Expression Grammars \\
-  We define the set $\setPeg$ via the following bnf formula, overloading the operator
-  $\cdot$
+  For a set of labels $\setLab$, we define the set $\setPeg(\setLab)$
+  via the following bnf formula, overloading the operator $\cdot$.
 
 \begin{envBNF}{0.40\textwidth}{Parsing Expression Grammar Syntax}{fig:PEGSyntax}
-  \bnfRule{\synPeg}{\setPeg}{c \in \Sigma}
-  \bnfAlt{\synPeg_1 \cdot \synPeg_2}
-  \bnfAlt{\synPeg_1 / \synPeg_2}
-  \bnfAlt{\synPeg^*}
+  \bnfRule{\synPeg}{\setPeg(\setLab)}{\synLabCol c}
+  \bnfAlt{\synLabCol \synPeg_1 \cdot \synPeg_2}
+  \bnfAlt{\synLabCol \synPeg_1 / \synPeg_2}
+  \bnfAlt{\synLabCol \synPeg^*}
 \end{envBNF}
 
 These rules are called character, sequence, choice, and possesive star
 respectively.
+
 \end{definition}
 
 \begin{definition} Regular Expressions \\
-  We define the set $\setReg$ via the following bnf formula, again overloading the
-  operator $\cdot$
+  We define the set $\setReg(\setLab)$ via the following bnf formula, again overloading
+  the operator $\cdot$. $\setLab$ is a set of labels,
+  and $\metaLab$ will be a metavariable ranging over these.
 
 \begin{envBNF}{0.40\textwidth}{Regular Expression Grammar Syntax}{fig:REGSyntax}
-  \bnfRule{\synReg}{\setReg}{\synRegEmp}
-  \bnfAlt{c \in \Sigma}
-  \bnfAlt{.}
-  \bnfAlt{\bot}
-  \bnfAlt{\synReg_1 \cdot \synReg_2}
-  \bnfAlt{\synReg_1 \cup \synReg_2}
-  \bnfAlt{\synReg_1 \cap \synReg_2}
-  \bnfAlt{\neg\synReg}
-  \bnfAlt{\synReg^*}
+  \bnfRule{\synReg}{\setReg(\setLab)}{\synLabCol \synRegEmp}
+  \bnfAlt{\synLabCol c}
+  \bnfAlt{\synLabCol .}
+  \bnfAlt{\synLabCol \bot}
+  \bnfAlt{\synLabCol \synReg_1 \cdot \synReg_2}
+  \bnfAlt{\synLabCol \synReg_1 \cup \synReg_2}
+  \bnfAlt{\synLabCol \synReg_1 \cap \synReg_2}
+  \bnfAlt{\synLabCol \neg\synReg}
+  \bnfAlt{\synLabCol \synReg^*}
 \end{envBNF}
 
-These rules are empty, character, any, empty, sequence, union, intersection,
+These rules are empty, character, wildcard, empty, sequence, union, intersection,
 negation, and kleene star respectively.
+
 \end{definition}
 
 \begin{definition} Parsing Expression Grammar Matching \\
@@ -178,6 +247,34 @@ negation, and kleene star respectively.
 
   \noindent from the paper
   ``Towards a Typed Semantics for Parsing Expression Grammars''.
+\end{definition}
+
+\begin{definition} Regular Expression Matches \\
+  When matched against a string, a regular expression
+  $\synReg \in \setReg(\setLab)$ will give a structured result, $\setMatch(\setLab)$.
+
+\begin{envBNF}{0.40\textwidth}{Regular Expression Matches}{fig:REGMatches}
+  \bnfRule{\metaMatch}{\setMatch(\setLab)}{\synEmp{\metaLab}}
+  \bnfAlt{\synChar{\metaLab}{c}}
+  \bnfAlt{\synWildcard{\metaLab}{c}}
+  \bnfAlt{\synSeq{\metaLab}{s}{\metaMatch_1}{\metaMatch_2}}
+  \bnfAlt{\synJoinL{\metaLab}{s}{\metaMatch}}
+  \bnfAlt{\synJoinR{\metaLab}{s}{\metaMatch}}
+  \bnfAlt{\synMeet{\metaLab}{s}{\metaMatch_1}{\metaMatch_2}}
+  \bnfAlt{\synNeg{\metaLab}{s}}
+  \bnfAlt{\synStarBase{\metaLab}}
+  \bnfAlt{\synStarRec{\metaLab}{s}{\metaMatch}}
+\end{envBNF}
+
+Fields, e.g. $.\mathit{\tt lab}$, are maps from
+$\setMatch(\setLab)$ with obvious semantics. The field $.\mathit{\tt submatch}$ is
+identity where otherwise undefined.
+
+The function $\cdot_{*} : \setMatch(\setLab) \to \setMatch(\setLab) \to \setMatch(\setLab)$ concatenates
+a star recursion to a match and is defined
+
+$\cdot_{*}(\metaMatch_1, \metaMatch_2) = \synStarRec{\metaMatch_2.\mathit{lab}}%
+{\metaMatch_1.\mathit{string} \cdot \metaMatch_2.\mathit{string}}{\metaMatch_1}{\metaMatch_2}$
 \end{definition}
 
 \begin{definition} Character Of \\
@@ -193,24 +290,40 @@ negation, and kleene star respectively.
 \end{definition}
 
 \begin{definition} Regular Expression Matching \\
-  We define $\funRegMatch : (\synReg \times \Sigma^*) \to \mathbb{B}$ recursively:
+  We define $\funRegMatch : (\setReg(\setLab) \times \Sigma^*) \to \funPow(\setMatch(\setLab))$ recursively:
   $ \\
-  \funRegMatch(\varepsilon, \varepsilon) = \mathit{\tt t} \\
-  \funRegMatch(\varepsilon, c \cdot s) = \mathit{\tt f} \\
-  \funRegMatch(c, c) = \mathit{\tt t} \\
-  \funRegMatch(c, \varepsilon) = \mathit{\tt f} \\
-  \funRegMatch(c, c') \mbox{ where } c \not= c' = \mathit{\tt f} \\
-  \funRegMatch(c, c' \cdot s) = \mathit{\tt f} \\
-  \funRegMatch(\cdot, c) = \mathit{\tt t} \\
-  \funRegMatch(\cdot, c' \cdot s) = \mathit{\tt f} \\
-  \funRegMatch(\bot, s) = \mathit{\tt f} \\
-  \funRegMatch(\synReg_1 \cdot \synReg_2, s) = \exists (s', s'' \in \Sigma^*), s = s' \cdot s'' \land
-      \funRegMatch(\synReg_1, s') \land \funRegMatch(\synReg_2, s'') \\
-  \funRegMatch(\synReg_1 \cup \synReg_2, s) = \funRegMatch(\synReg_1, s) \lor \funRegMatch(\synReg_2, s) \\
-  \funRegMatch(\synReg_1 \cap \synReg_2, s) = \funRegMatch(\synReg_1, s) \land \funRegMatch(\synReg_2, s) \\
-  \funRegMatch(\neg\synReg_1, s) = \neg\funRegMatch(\synReg_1, s)\\
-  \funRegMatch(\synReg_1^*, s) = \exists (ss \in \Sigma^{**}), \bigwedge_{s \mathop{char{\mhyphen}of} ss}
-    \funRegMatch(\synReg_1, s)\\
+  \funRegMatch(\metaLab\colon \varepsilon, \varepsilon) = \{\synEmp{\metaLab}\} \\
+  \funRegMatch(\metaLab\colon \varepsilon, c \cdot s) = \emptyset \\
+  \funRegMatch(\metaLab\colon c, c) = \{\synChar{\metaLab}{c}\} \\
+  \funRegMatch(\metaLab\colon c, s) \mbox{ where } s \not= c = \emptyset \\
+  \funRegMatch(\metaLab\colon ., c) = \synWildcard{\metaLab}{c} \\
+  \funRegMatch(\metaLab\colon ., c \cdot c' \cdot s) = \emptyset \\
+  \funRegMatch(\metaLab\colon \bot, s) = \emptyset \\
+  \funRegMatch(\metaLab\colon \synReg_1 \cdot \synReg_2, s) =
+  \{\synSeq{\metaLab}{s}{\metaMatch_1}{\metaMatch_2} \\
+  \mbox{\hspace{5em}} \mid \exists (s', s'' \in \Sigma^*), s' \cdot s'' = s \land
+  \metaMatch_1 \in \funRegMatch(\synReg_1, s') \land \metaMatch_2 \in \funRegMatch(\synReg_2, s'') \} \\[12pt]
+  \funRegMatch(\metaLab\colon \synReg_1 \cup \synReg_2, s) = \\
+  \mbox{\hspace{5em}}
+  \{\synJoinL{\metaLab}{s}{\metaMatch} \mid \metaMatch \funRegMatch(\synReg_1, s) \} \cup \\
+  \mbox{\hspace{5em}}
+  \{\synJoinR{\metaLab}{s}{\metaMatch} \mid \metaMatch \funRegMatch(\synReg_2, s) \} \\[12pt]
+  \funRegMatch(\metaLab\colon \synReg_1 \cap \synReg_2, s) = \\
+  \mbox{\hspace{5em}}
+  \{\synMeet{\metaLab}{s}{\metaMatch_1}{\metaMatch_2} \mid \metaMatch_1 \in \funRegMatch(\synReg_1, s) \land \\
+  \mbox{\hspace{5em}}
+    \metaMatch_2 \in \funRegMatch(\synReg_2, s) \} \\[12pt]
+  \funRegMatch(\metaLab\colon \neg\synReg, s) =
+  \begin{cases}
+    \funMatch(\funRegMatch(\synReg, s)) \equiv \emptyset & \bigg| \{\synNeg{\metaLab}{s}\}\\&\bigg|\\
+    \mbox{otherwise} & \bigg| \emptyset
+  \end{cases} \\[12pt]
+  \funRegMatch(\metaLab\colon \synReg^*, s) = \\
+  \mbox{\hspace{5em}}
+  \{ \funFold(\cdot_{*}, \synStarBase{\metaLab}, ms \in \setMatch(\setLab)^*) \\
+  \mbox{\hspace{5em}} \mid
+  \exists ss \in \Sigma^{**}, \bullet ss = s \land
+  \forall i, ms_i \in \funRegMatch(\synReg, ss_i)\}
   $
 
   While most rules are self explanatory, the rule for concatenation and star
@@ -222,6 +335,9 @@ negation, and kleene star respectively.
   Star considers all possible splits of the string, and requires that the
   constituent strings of the split are each matched by the subexpression.
 
+  It follows from the definitions alone that for arbitrary
+  $(\synReg, s)$, and for an arbitrary match $\metaMatch$ in
+  $\funRegMatch(\synReg, s)$, $\metaMatch.\mathit{string} = s$.
 \end{definition}
 
 %%% Maybe we can still do the mutual recursion?
@@ -237,6 +353,26 @@ negation, and kleene star respectively.
 %%% negate(p1/p2) = negate(p1) intersection (negate(p2))
 %%% negate(p1*) = {}
 
+\begin{definition} Well Founded Pairs \\
+  We define $\funLabelToExpr : \setPeg(\setLab_1) \cup \setReg(\setLab_2) \to
+  (\setLab_1 \cup \setLab_2 \to \funPow(\setPeg(\setLab_1) \cup \setReg(\setLab_2)))$
+  recursively on the syntax of $\setPeg(\setLab_1)$ and $\setReg(\setLab_2)$,
+  collecting the parsing expression grammar corresponding to the label.
+
+  A parsing expression grammar $\synPeg$ or regular expression $\synReg$ is in the set
+  of well formed expressions, $\setWF(\setLab)$, iff for every label $\metaLab \in \setLab$,
+  $\funLabelToExpr(\synPeg)(\metaLab)$ (resp $\funLabelToExpr(\synReg)(\metaLab)$)
+  has no more than one element.
+
+  A pair $(\synPeg, \synReg) \in \setPeg(\setLab_1) \times \setReg(\setLab_2)$
+  is in the set of well formed pairs $\setWFTwo(\setLab_1 \cup \setLab_2)$
+  if for every label, the pointwise union $\funLabelToExpr(\synPeg)$ and
+  $\funLabelToExpr(\synReg)$ applied to the label has no more than one element.
+
+  $\setWF$ and $\setWFTwo$ informally mean expressions and pairs where each
+  label is different.
+\end{definition}
+
 \begin{definition} Parsing Expression Grammar Translation \\
 
   On input $(\synPeg, \synReg)$, the function $\funPEGREG$ produces a regular expression
@@ -245,24 +381,117 @@ negation, and kleene star respectively.
   expression corresponding to the set of characters that cause $\synPeg$ to match
   $\bot$.
 
+  In order to define the output set, we need to have a labelling scheme for
+  combining these; so the labelling scheme will first be detailed, followed by
+  the definition of the function.
+
+\begin{envBNF}{0.40\textwidth}{Labelling Scheme}{fig:PEGREGLabellingScheme}
+  \bnfRule{\metaLab_{pr}}{\setPegregLab(\setLab)}{(\metaLab_1 \in \setLab)}
+  \bnfAlt{\mathit{PRLabChar}(\metaLab \in \setLab) }
+  \bnfAlt{\mathit{PRLabSeq}(\metaLab \in \setLab) }
+  \bnfAlt{\mathit{PRLabUnionWildcard}(\metaLab \in \setLab)}
+  \bnfAlt{...}
+\end{envBNF}
+
+Below, the labels in the output will be given implicitly, with examples
+shown in more detail to make it clear how the labels are formed.
+
 \begin{alignat}{2}& \notag
- \funPEGREG : (\setPeg \times \setReg) \to \setReg \\&
+ \funPEGREG : (\setPeg(\setLab_1) \times \setReg(\setLab_2)) \to \setReg(\setPegregLab(\setLab_1 \cup \setLab_2)) \\&
  \funPEGREG(c, \synReg)  =  c \cdot \synReg \\&
  \funPEGREG(\synPeg_1 \cdot \synPeg_2, \synReg)  =  \funPEGREG(\synPeg_1, \funPEGREG(\synPeg_2, \synReg)) \\&
  \funPEGREG(\synPeg_1/\synPeg_2, \synReg)  =  \funPEGREG(\synPeg_1, \synReg) \cup
   (\funPEGREG(\synPeg_2, \synReg) \cap \funNegate(\synPeg_1) \operatorname{\cdot}.^*)\\&
  \funPEGREG(\synPeg^*, \synReg)  =  \funPEGREG(\synPeg, \varepsilon)^* \cdot
   (\synReg \cap \funNegate(\synPeg) \operatorname{\cdot} .^*) \\&\notag \\&\notag
-\funNegate : \setPeg \to \setReg \\&
+\funNegate : \setPeg(\setLab_1) \to \setReg(\setPegregLab(\setLab_1 \cup \setLab_2)) \\&
 \funNegate(c) = . \cap {\neg}c\\&
 \funNegate(\synPeg_1 \cdot \synPeg_2) = \funNegate(\synPeg_1) \cup \funPEGREG(\synPeg_1, \funNegate(\synPeg_2)) \\&
 \funNegate(\synPeg_1 / \synPeg_2) = \funNegate(\synPeg_1) \cap \funNegate(\synPeg_2) \\&
 \funNegate(\synPeg^*) = \bot
 \end{alignat}
+
+To make it clear how the labels are formed, let $.\mathit{lab}$ be, by abuse of
+notation, a projection from regular exprssions to their labels, and see the
+case for char in more detail:
+
+\begin{alignat}{2}& \notag
+ \funPEGREG : (\setPeg(\setLab_1) \times \setReg(\setLab_2)) \to \setReg(\setPegregLab(\setLab)) \\& \notag
+  \funPEGREG(c, \synReg)  =  \operatorname{\mathit{PRLabSeq}(\synReg.\mathit{lab})}\colon %
+                     (\operatorname{\mathit{PRLabChar}}(\synReg.\mathit{lab})\colon c) \cdot \synReg
+\end{alignat}
+
+For another example, consider the choice case. If viewed in the order
+from the innermost subexpression to the outermost, the recursion constructs
+a wildcard, then a kleene star with this subexpression,
+then $\funNegate(\synPeg_1)$, then the concatenation of the two, etc.
+
+So $\funNegate(\synPeg_1)$ is first computed, then
+$\operatorname{\mathit{PRLabUnionWildcard}}(\funNegate(\synPeg_1).\mathit{lab})$ is used to give
+a label to the expression that matches any character. This pattern of computing
+new, unique labels from the subexpressions continues until the entire expression
+is labelled.
+
+This labelling scheme will give $\funPEGREG$ the property that it maps $\setWFTwo$ pairs to
+$\setWF$ regular expressions.
 \end{definition}
 
-\begin{proposition}
-  Characterization of correspondance needs rework!
+\begin{definition}
+  The function
+
+  $\funExtractPeg : (\setPeg(\setLab_1) \times
+                    \setMatch(\setPegregLab(\setLab_1 \cup \setLab_2))) \nrightarrow
+                    \setMatch(\setPegregLab(\setLab_1 \cup \setLab_2))$
+
+   applied to a pair $(\synPeg, \metaMatch)$ extracts the part corresponding to the
+   peg match.
+
+   For any parsing expression grammar $\synPeg$,
+   any regular expression $\synReg$, any string $s$,
+   and any match $\metaMatch$ in $\funRegMatch(\funPEGREG(\synPeg, \synReg), s)$,
+   $\funExtractPeg$ is total.
+
+   Similarly,
+  $\funExtractReg : (\setReg(\setLab_1) \times
+                    \setMatch(\setPegregLab(\setLab_1 \cup \setLab_2))) \nrightarrow
+                    \setMatch(\setPegregLab(\setLab_1 \cup \setLab_2))$
+   is defined.
+\end{definition}
+
+\begin{proposition} Translation Correspondance \\
+  Let $(\synPeg, \synReg)$ be an arbitrary pair of parsing and regular expressions, in
+  $\setWFTwo(\setLab_1 \cup \setLab_2)$. Then the following will hold:
+
+  \begin{enumerate}
+  \item Let $s$ be an arbitrary string, and $\metaMatch$ be an arbitrary match in
+    $\funRegMatch(\funPEGREG(\synPeg, \synReg), s)$. Then
+    $\metaMatch.\mathit{string} = \funExtractPeg(\synPeg, \metaMatch).string \cdot \funExtractReg(\synReg, \metaMatch).string$.
+
+  \item Let $s$ be an arbitrary string. Suppose $\funPegMatch(\synPeg, s) = \bot$.
+    Then the set $\funRegMatch(\funNegate(\synPeg), s)$ contains at least one element, and
+    for all matches $\metaMatch$ in $\funRegMatch(\funNegate(\synPeg), s)$, the following
+    holds: $\metaMatch.{\mathit{string}} = \funExtractPeg(\synPeg, \metaMatch).{\mathit{string}} = s$.
+
+  \item Let $s$ be an arbitrary string. Suppose $\funRegMatch(\funNegate(\synPeg), s)$ is
+    not empty. Then it contains one element, and $\funPegMatch(\synPeg, s) = \bot$.
+
+  \item Let $s$ be an arbitrary string. For all matches
+    $\metaMatch \in \funRegMatch(\funPEGREG(\synPeg, \synReg), s)$,
+    $\funPegMatch(\synPeg, s) = (\funExtractPeg(\metaMatch), \funExtractReg(\synReg, \metaMatch))$ and
+    $\funExtractReg(\synReg, \metaMatch) \in \funRegMatch(\synReg, \funExtractReg(\synReg, \metaMatch).\mathit{string})$.
+  \end{enumerate}
 \end{proposition}
+
+In the above proposition, the first property requires that matches
+from $\funPEGREG$ split the string into a peg portion and a reg portion.
+
+The second property gives forward correctness for $\funNegate$. The third property
+gives backward correctness for $\funNegate$. The final property gives correctness for
+$\funPEGREG$.
+
+\begin{proof}
+  I think we can do a proof by induction. I'll have to take the leap
+  and try them out.
+\end{proof}
 
 \end{document}
