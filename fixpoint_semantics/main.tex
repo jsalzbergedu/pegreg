@@ -472,6 +472,9 @@ $\setWF$ regular expressions.
     for all matches $\metaMatch$ in $\funRegMatch(\funNegate(\synPeg), s)$, the following
     holds: $\metaMatch.{\mathit{string}} = \funExtractPeg(\synPeg, \metaMatch).{\mathit{string}} = s$.
 
+  \item Let $s$ be an arbitrary string. Supose $\funPegMatch(\synPeg, s) = (s', k')$, and
+    $\funRegMatch(\synReg, k)$ is nonempty. Then $\funRegMatch(\funPEGREG(\synPeg, \synReg), s)$ is nonempty.
+
   \item Let $s$ be an arbitrary string. Suppose $\funRegMatch(\funNegate(\synPeg), s)$ is
     not empty. Then it contains one element, and $\funPegMatch(\synPeg, s) = \bot$.
 
@@ -484,10 +487,8 @@ $\setWF$ regular expressions.
 
 In the above proposition, the first property requires that matches
 from $\funPEGREG$ split the string into a peg portion and a reg portion.
-
-The second property gives forward correctness for $\funNegate$. The third property
-gives backward correctness for $\funNegate$. The final property gives correctness for
-$\funPEGREG$.
+The rest of the properties give forward and backwards correctness for
+$\funNegate$ and $\funPEGREG$, in that order.
 
 \begin{proof}
   I think we can do a proof by induction. I'll have to take the leap
