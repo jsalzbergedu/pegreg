@@ -250,11 +250,11 @@ negation, and kleene star respectively.
  \funPEGREG(c, \synReg)  =  c \cdot \synReg \\&
  \funPEGREG(\synPeg_1 \cdot \synPeg_2, \synReg)  =  \funPEGREG(\synPeg_1, \funPEGREG(\synPeg_2, \synReg)) \\&
  \funPEGREG(\synPeg_1/\synPeg_2, \synReg)  =  \funPEGREG(\synPeg_1, \synReg) \cup
-  (\funPEGREG(\synPeg_2, \synReg) \cap \funNegate(\synPeg_1) \operatorname{\cdot}.^*)\\&
+  (\funPEGREG(\synPeg_2, \synReg) \cap \funNegate(\synPeg_1))\\&
  \funPEGREG(\synPeg^*, \synReg)  =  \funPEGREG(\synPeg, \varepsilon)^* \cdot
-  (\synReg \cap \funNegate(\synPeg) \operatorname{\cdot} .^*) \\&\notag \\&\notag
+  (\synReg \cap \funNegate(\synPeg)) \\&\notag \\&\notag
 \funNegate : \setPeg \to \setReg \\&
-\funNegate(c) = . \cap {\neg}c\\&
+\funNegate(c) = (\Sigma \setminus \{c\}) \cdot \Sigma^* \\&
 \funNegate(\synPeg_1 \cdot \synPeg_2) = \funNegate(\synPeg_1) \cup \funPEGREG(\synPeg_1, \funNegate(\synPeg_2)) \\&
 \funNegate(\synPeg_1 / \synPeg_2) = \funNegate(\synPeg_1) \cap \funNegate(\synPeg_2) \\&
 \funNegate(\synPeg^*) = \bot
